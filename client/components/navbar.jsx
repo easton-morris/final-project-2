@@ -21,7 +21,7 @@ export default function NavBar(props) {
               <a className='nav-link active' aria-current='page' href='#'>Home</a>
             </li>
             <li className='nav-item'>
-              <a className='nav-link' href='#'>Link</a>
+              <a className='nav-link' href='#' data-bs-toggle="modal" data-bs-target="#pokePicker">Choose Pok&eacute;mon</a>
             </li>
             <li className='nav-item dropdown'>
               <a className='nav-link dropdown-toggle' href='#' role='button' data-bs-toggle='dropdown' aria-expanded='false'>
