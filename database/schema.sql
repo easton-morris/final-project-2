@@ -28,10 +28,12 @@ CREATE TABLE "public"."leaders" (
 
 CREATE TABLE "public"."pokemon" (
 	"pokemonId" serial NOT NULL,
-	"defenseMove" text NOT NULL,
+	"statusMove" text NOT NULL,
 	"physicalMove" text NOT NULL,
 	"specialMove" text NOT NULL,
 	"dexNumber" integer NOT NULL UNIQUE,
+  "pkmnName" text NOT NULL UNIQUE,
+	"sprite" text NOT NULL UNIQUE,
 	CONSTRAINT "pokemon_pk" PRIMARY KEY ("pokemonId")
 ) WITH (
   OIDS=FALSE
