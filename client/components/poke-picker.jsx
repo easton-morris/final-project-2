@@ -32,6 +32,13 @@ export default class PokePicker extends React.Component {
   }
 
   componentDidMount() {
+    const usersMon = JSON.parse(localStorage.getItem('userPkmn'));
+    if (usersMon) {
+      this.setState({
+        userPkmn: usersMon,
+        displayPkmn: usersMon
+      });
+    }
     this.buildLists();
   }
 
@@ -40,6 +47,19 @@ export default class PokePicker extends React.Component {
       this.setState({
         userPkmn: this.state.displayPkmn
       });
+
+      // set in localStorage until i get sign in working //
+      localStorage.setItem('userPkmn', JSON.stringify(this.state.displayPkmn));
+
+      const pokeSuccessToast = document.getElementById('pokeSuccess');
+      const toast = new bootstrap.Toast(pokeSuccessToast);
+
+      toast.show();
+    } else if (this.state.displayPkmn.pkmnName === this.state.userPkmn.pkmnName) {
+      const pokeDupeToast = document.getElementById('pokeDupe');
+      const toast = new bootstrap.Toast(pokeDupeToast);
+
+      toast.show();
     }
 
     event.preventDefault();
@@ -73,10 +93,10 @@ export default class PokePicker extends React.Component {
     let newPoke = {};
     if ($pokeSearch.value !== '' && rawValue !== '') {
       newPoke = this.state.pkmnList.find(element => (element.pkmnName === $pokeSearch.value));
+      this.setState({
+        displayPkmn: newPoke
+      });
     }
-    this.setState({
-      displayPkmn: newPoke
-    });
     event.preventDefault();
   }
 
@@ -122,12 +142,36 @@ export default class PokePicker extends React.Component {
                       </tr>
                     </tbody>
                   </table>
-                  <a href="#" className="btn btn-primary float-end">Choose this Pok&eacute;mon</a>
+                  <a className="btn btn-primary float-end" onClick={this.choosePkmnHandler}>Choose this Pok&eacute;mon</a>
                 </div>
               </div>
             </div>
             <div className="modal-footer">
               <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+        <div className="toast-container position-fixed bottom-0 end-0 p-3">
+          <div id="pokeDupe" className="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div className="toast-header">
+              <strong className="me-auto">Warning!</strong>
+              <small>Pok&eacute;Picker Issue</small>
+              <button type="button" className="btn-close" data-bs-dismiss="toast" aria-label="Close"/>
+            </div>
+            <div className="toast-body">
+              You already picked this Pok&eacute;mon!
+            </div>
+          </div>
+        </div>
+        <div className="toast-container position-fixed bottom-0 end-0 p-3">
+          <div id="pokeSuccess" className="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div className="toast-header">
+              <strong className="me-auto">Congratulations!</strong>
+              <small>Pok&eacute;Picker Issue</small>
+              <button type="button" className="btn-close" data-bs-dismiss="toast" aria-label="Close" />
+            </div>
+            <div className="toast-body">
+              You have picked {this.state.displayPkmn.pkmnName}!
             </div>
           </div>
         </div>
