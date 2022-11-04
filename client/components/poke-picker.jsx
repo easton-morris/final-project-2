@@ -22,15 +22,27 @@ export default class PokePicker extends React.Component {
         sprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png',
         statusMove: 'Growl'
       },
-      pkmnNameList: []
+      pkmnNameList: [],
+      userPkmn: {}
     };
 
     this.buildLists = this.buildLists.bind(this);
     this.searchHandler = this.searchHandler.bind(this);
+    this.choosePkmnHandler = this.choosePkmnHandler.bind(this);
   }
 
   componentDidMount() {
     this.buildLists();
+  }
+
+  choosePkmnHandler(event) {
+    if (this.state.displayPkmn.pkmnName !== this.state.userPkmn.pkmnName) {
+      this.setState({
+        userPkmn: this.state.displayPkmn
+      });
+    }
+
+    event.preventDefault();
   }
 
   buildLists() {
