@@ -4,6 +4,6 @@ INSERT INTO pokemon ("statusMove", "physicalMove", "specialMove", "dexNumber", "
   ('Growl', 'Tackle', 'Hidden Power', 5, 'Squirtle', 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/7.png');
 
 INSERT INTO leaders ("leaderName", "leaderPic", "leaderPkmn") VALUES
-  ('Brock', 'https://archives.bulbagarden.net/media/upload/thumb/e/e2/VSBrock_PE.png/600px-VSBrock_PE.png', 1),
-  ('Misty', 'https://archives.bulbagarden.net/media/upload/0/0c/VSMisty_PE.png', 2),
-  ('Brock', 'https://archives.bulbagarden.net/media/upload/c/c6/VSLt_Surge_PE.png', 3)
+  ('Brock', 'https://static.wikia.nocookie.net/pokemon/images/1/13/Brock_Let%27s_Go%2C_Pikachu%21_and_Let%27s_Go%2C_Eevee%21.png', 1),
+  ('Misty', 'https://static.wikia.nocookie.net/pokemon/images/2/25/Misty_Let%27s_Go%2C_Pikachu%21_and_Let%27s_Go%2C_Eevee%21.png', 2),
+  ('Lt. Surge', 'https://static.wikia.nocookie.net/pokemon/images/1/16/Lt._Surge_Let%27s_Go%2C_Pikachu%21_and_Let%27s_Go%2C_Eevee%21.png', 3);
