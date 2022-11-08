@@ -20,6 +20,8 @@ CREATE TABLE "public"."users" (
 
 CREATE TABLE "public"."leaders" (
 	"leaderId" serial NOT NULL,
+  "leaderName" text NOT NULL,
+  "leaderPic" text NOT NULL,
 	"leaderPkmn" integer NOT NULL UNIQUE,
 	CONSTRAINT "leaders_pk" PRIMARY KEY ("leaderId")
 ) WITH (
