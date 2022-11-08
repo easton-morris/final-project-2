@@ -100,6 +100,31 @@ app.get('/api/leader-list/all', (req, res, next) => {
     .catch(err => next(err));
 });
 
+// POST: create a battle for a record ID
+
+app.post('/api/battles/new', (req, res, next) => {
+  const { userId, userPkmn, leaderPkmn, leaderName } = req.body;
+
+  const sql = `
+    INSERT INTO "recordList" ("userId", "result", "userPkmn", "leaderPkmn", "leaderName")
+    VALUES ($1, 'pending', $2, $3, $4)
+    RETURNING "recordId"
+  `;
+  const params = [userId, userPkmn, leaderPkmn, leaderName];
+  db.query(sql, params)
+    .then(result => {
+      if (!result.rows[0]) {
+        throw new ClientError(400, 'Something went wrong');
+      } else {
+        return result.rows[0];
+      }
+    })
+    .then(record => {
+      res.status(201).json(record);
+    })
+    .catch(err => next(err));
+});
+
 app.use(errorMiddleware);
 
 app.listen(process.env.PORT, () => {

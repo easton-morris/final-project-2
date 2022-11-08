@@ -7,3 +7,6 @@ INSERT INTO leaders ("leaderName", "leaderPic", "leaderPkmn") VALUES
   ('Brock', 'https://static.wikia.nocookie.net/pokemon/images/1/13/Brock_Let%27s_Go%2C_Pikachu%21_and_Let%27s_Go%2C_Eevee%21.png', 1),
   ('Misty', 'https://static.wikia.nocookie.net/pokemon/images/2/25/Misty_Let%27s_Go%2C_Pikachu%21_and_Let%27s_Go%2C_Eevee%21.png', 2),
   ('Lt. Surge', 'https://static.wikia.nocookie.net/pokemon/images/1/16/Lt._Surge_Let%27s_Go%2C_Pikachu%21_and_Let%27s_Go%2C_Eevee%21.png', 3);
+
+  INSERT INTO users ("username", "password", "email") VALUES
+  ('bob', 'password', 'bob@example.co');

@@ -12,11 +12,14 @@ export default class GymLeaders extends React.Component {
     super(props);
 
     this.state = {
-      leadersList: []
+      leadersList: [],
+      selectedLeader: {}
     };
 
     this.LeaderCard = this.LeaderCard.bind(this);
     this.GymLeaderList = this.GymLeaderList.bind(this);
+    this.battleHandler = this.battleHandler.bind(this);
+    this.leaderSelectHandler = this.leaderSelectHandler.bind(this);
   }
 
   componentDidMount() {
@@ -40,7 +43,7 @@ export default class GymLeaders extends React.Component {
   GymLeaderList() {
     const gymLeaderList = this.state.leadersList;
     const listItems = gymLeaderList.map(leader => {
-      return <this.LeaderCard key={leader.leaderId} leaderName={leader.leaderName} leaderPic={leader.leaderPic} leaderPkmn={leader.leaderPkmn} />;
+      return <this.LeaderCard key={leader.leaderId} leaderId={leader.leaderId} leaderName={leader.leaderName} leaderPic={leader.leaderPic} leaderPkmn={leader.leaderPkmn} />;
     });
 
     return (
@@ -50,7 +53,7 @@ export default class GymLeaders extends React.Component {
 
   LeaderCard(props) {
 
-    const { leaderName, leaderPic, leaderPkmn } = props;
+    const { leaderName, leaderPic, leaderPkmn, leaderId } = props;
 
     return (
       <div className='col-md-4'>
@@ -69,11 +72,52 @@ export default class GymLeaders extends React.Component {
             <li className="list-group-item text-bg-warning">Status Move: {leaderPkmn.statusMove}</li>
           </ul>
           <div className="card-footer">
-            <a href="#" className="btn btn-primary">Battle</a>
+            <a type='button' className="btn btn-primary" data-leader-id={leaderId} data-bs-toggle="modal" data-bs-target="#battleConfirm" onClick={this.leaderSelectHandler}>Battle</a>
           </div>
         </div>
       </div>
     );
+  }
+
+  leaderSelectHandler(event) {
+    const compareInt = parseInt(event.target.dataset.leaderId, 10);
+    const newLeader = this.state.leadersList.find(element => {
+      return (element.leaderId === compareInt);
+    });
+
+    this.setState({
+      selectedLeader: newLeader
+    });
+
+    event.preventDefault();
+  }
+
+  // userId and userPkmn in the query string until I have auth set up, along with a bunch of other data
+
+  battleHandler(event) {
+    let recordId;
+    const battleData = {
+      userId: 1,
+      userPkmn: 1,
+      leaderPkmn: this.state.selectedLeader.leaderPkmn.pokemonId,
+      leaderName: this.state.selectedLeader.leaderName
+    };
+
+    fetch('/api/battles/new', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(battleData)
+    })
+      .then(res => res.json())
+      .then(data => {
+        recordId = data.recordId;
+        window.location.href = `#battle?userId=1&userPkmn=1&leaderPkmn=${this.state.selectedLeader.leaderPkmn.pokemonId}&leaderName=${this.state.selectedLeader.leaderName}&recordId=${recordId}`;
+      })
+      .catch(err => console.error(err));
+
+    event.preventDefault();
   }
 
   render() {
@@ -83,6 +127,24 @@ export default class GymLeaders extends React.Component {
           <div className='row g-4'>
             <this.GymLeaderList />
           </div>
+          <div className="modal fade" id="battleConfirm" tabIndex="-1" aria-labelledby="battleConfirmLabel" aria-hidden="true">
+            <div className="modal-dialog">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h1 className="modal-title fs-5" id="battleConfirmLabel">Confirm Battle</h1>
+                  <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close" />
+                </div>
+                <div className="modal-body">
+                  Are you ready to battle {this.state.selectedLeader.leaderName}?
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                  <button type="button" className="btn btn-primary" data-bs-dismiss="modal" onClick={this.battleHandler}>Let&apos;s go!</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
       );
     } else {
