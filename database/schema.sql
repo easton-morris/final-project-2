@@ -12,7 +12,7 @@ CREATE TABLE "public"."users" (
 	"password" text NOT NULL,
 	"email" text NOT NULL UNIQUE,
 	"createdAt" TIMESTAMPTZ NOT NULL default now(),
-	"userPkmn" integer NOT NULL,
+	"userPkmn" integer,
 	CONSTRAINT "users_pk" PRIMARY KEY ("userId")
 ) WITH (
   OIDS=FALSE
@@ -20,6 +20,8 @@ CREATE TABLE "public"."users" (
 
 CREATE TABLE "public"."leaders" (
 	"leaderId" serial NOT NULL,
+  "leaderName" text NOT NULL,
+  "leaderPic" text NOT NULL,
 	"leaderPkmn" integer NOT NULL UNIQUE,
 	CONSTRAINT "leaders_pk" PRIMARY KEY ("leaderId")
 ) WITH (
@@ -45,6 +47,7 @@ CREATE TABLE "public"."recordList" (
 	"result" text NOT NULL,
 	"userPkmn" integer NOT NULL,
 	"leaderPkmn" integer NOT NULL,
+  "leaderName" text NOT NULL,
 	CONSTRAINT "recordList_pk" PRIMARY KEY ("recordId")
 ) WITH (
   OIDS=FALSE
