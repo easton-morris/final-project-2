@@ -125,6 +125,51 @@ app.post('/api/battles/new', (req, res, next) => {
     .catch(err => next(err));
 });
 
+app.patch('/api/battles/result', (req, res, next) => {
+  const { recordId, battleResult } = req.body;
+
+  const sql = `
+    SELECT * FROM "recordList"
+    WHERE "recordId" = $1
+  `;
+  const params = [recordId];
+  db.query(sql, params)
+    .then(result => {
+      if (!result.rows[0]) {
+        throw new ClientError(400, 'record does not exist');
+      } else {
+        return result.rows[0];
+      }
+    })
+    .then(record => {
+      if (record.result !== 'pending') {
+        throw new ClientError(400, 'battle has completed already');
+      } else {
+        const sql = `
+          UPDATE "recordList"
+          SET "result" = $1
+          WHERE "recordId" = $2
+          RETURNING *
+        `;
+        const params = [battleResult, recordId];
+
+        db.query(sql, params)
+          .then(result => {
+            if (!result.rows[0]) {
+              throw new ClientError(400, 'Something went wrong');
+            } else {
+              return result.rows[0];
+            }
+          })
+          .then(record => {
+            res.status(200).json(record);
+          })
+          .catch(err => next(err));
+      }
+    })
+    .catch(err => next(err));
+});
+
 app.use(errorMiddleware);
 
 app.listen(process.env.PORT, () => {

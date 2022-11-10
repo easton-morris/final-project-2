@@ -56,9 +56,37 @@ export default class Battles extends React.Component {
                 <li className="list-group-item text-bg-danger">Special Move: {this.state.leaderPkmn.specialMove}</li>
                 <li className="list-group-item text-bg-warning">Status Move: {this.state.leaderPkmn.statusMove}</li>
               </ul>
-              <div className="card-footer">
-                <a type='button' className="btn btn-primary" data-leader-id={this.state.leaderId} data-bs-toggle="modal" data-bs-target="#battleConfirm" onClick={this.leaderSelectHandler}>Battle</a>
-              </div>
+            </div>
+          </div>
+        </div>
+        <div className="row">
+          <div className="card">
+            <img src={this.state.displayPkmn.sprite} className="card-img-top" alt={`${this.state.displayPkmn.pkmnName} Picture`} />
+            <div className="card-body">
+              <h5 className="card-title">{this.state.displayPkmn.pkmnName}</h5>
+              <table className="table table-bordered">
+                <thead>
+                  <tr>
+                    <th scope="col">Move Type</th>
+                    <th scope="col">Move Name</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="table-success">
+                    <th scope="row">Physical</th>
+                    <td>{this.state.displayPkmn.physicalMove}</td>
+                  </tr>
+                  <tr className="table-danger">
+                    <th scope="row">Special</th>
+                    <td>{this.state.displayPkmn.specialMove}</td>
+                  </tr>
+                  <tr className="table-warning">
+                    <th scope="row">Status</th>
+                    <td>{this.state.displayPkmn.statusMove}</td>
+                  </tr>
+                </tbody>
+              </table>
+              <a className="btn btn-primary float-end" onClick={this.choosePkmnHandler}>Choose this Pok&eacute;mon</a>
             </div>
           </div>
         </div>

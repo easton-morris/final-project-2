@@ -3,6 +3,7 @@ import Home from './pages/home';
 import NavBar from './components/navbar';
 import PokePicker from './components/poke-picker';
 import GymLeaders from './pages/gym-leaders';
+import Battles from './pages/battles';
 import NotFound from './pages/not-found';
 
 import { parseRoute } from './lib';
@@ -31,6 +32,9 @@ export default class App extends React.Component {
     }
     if (route.path === 'gym-leaders') {
       return <GymLeaders />;
+    }
+    if (route.path === 'battle') {
+      return <Battles />;
     }
     return <NotFound />;
   }
