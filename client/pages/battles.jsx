@@ -44,6 +44,8 @@ export default class Battles extends React.Component {
         }
       }
     };
+
+    this.onMoveSelectHandler = this.onMoveSelectHandler.bind(this);
   }
 
   componentDidMount() {
@@ -121,6 +123,18 @@ export default class Battles extends React.Component {
     });
   }
 
+  onMoveSelectHandler(event) {
+    if (event.target.className === 'btn btn-success') {
+      alert(event.target.textContent);
+    } else if (event.target.className === 'btn btn-danger') {
+      alert(event.target.textContent);
+    } else if (event.target.className === 'btn btn-warning') {
+      alert(event.target.textContent);
+    }
+
+    event.preventDefault();
+  }
+
   render() {
     return (
       <div className="container">
@@ -149,9 +163,9 @@ export default class Battles extends React.Component {
             <div className="card-body text-center">
               <h5 className="card-title">{this.state.user.pkmn.pkmnName}</h5>
               <div className="btn-group btn-group-lg" role="group" aria-label="Basic mixed styles example">
-                <button type="button" className="btn btn-success">Physical: {this.state.user.pkmn.physicalMove}</button>
-                <button type="button" className="btn btn-danger">Special: {this.state.user.pkmn.specialMove}</button>
-                <button type="button" className="btn btn-warning">Status: {this.state.user.pkmn.statusMove}</button>
+                <button type="button" className="btn btn-success" onClick={this.onMoveSelectHandler}>Physical: {this.state.user.pkmn.physicalMove}</button>
+                <button type="button" className="btn btn-danger" onClick={this.onMoveSelectHandler}>Special: {this.state.user.pkmn.specialMove}</button>
+                <button type="button" className="btn btn-warning" onClick={this.onMoveSelectHandler}>Status: {this.state.user.pkmn.statusMove}</button>
               </div>
             </div>
           </div>
