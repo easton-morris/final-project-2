@@ -100,6 +100,31 @@ app.get('/api/leader-list/all', (req, res, next) => {
     .catch(err => next(err));
 });
 
+// GET: a specific leader's data from the DB
+
+app.get('/api/leader-list/:id', (req, res, next) => {
+  const id = req.params.id;
+  if (!id) {
+    throw new ClientError(400, 'id is required');
+  }
+
+  const sql = `
+    SELECT *
+    FROM "leaders"
+    WHERE "leaderId" = $1
+  `;
+  const params = [id];
+  db.query(sql, params)
+    .then(result => {
+      if (!result.rows[0]) {
+        throw new ClientError(400, 'leader does not exist');
+      } else {
+        res.status(200).json(result.rows[0]);
+      }
+    })
+    .catch(err => next(err));
+});
+
 // POST: create a battle for a record ID
 
 app.post('/api/battles/new', (req, res, next) => {
@@ -124,6 +149,8 @@ app.post('/api/battles/new', (req, res, next) => {
     })
     .catch(err => next(err));
 });
+
+// PATCH: updates the record with the result of the battle
 
 app.patch('/api/battles/result', (req, res, next) => {
   const { recordId, battleResult } = req.body;

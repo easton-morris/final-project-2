@@ -110,10 +110,16 @@ export default class GymLeaders extends React.Component {
       },
       body: JSON.stringify(battleData)
     })
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) {
+          throw new Error('Something went wrong.');
+        } else {
+          return res.json();
+        }
+      })
       .then(data => {
         recordId = data.recordId;
-        window.location.href = `#battle?userId=1&userPkmn=1&leaderPkmn=${this.state.selectedLeader.leaderPkmn.pokemonId}&leaderName=${this.state.selectedLeader.leaderName}&recordId=${recordId}`;
+        window.location.href = `#battle?userId=1&userPkmn=1&leaderPkmn=${this.state.selectedLeader.leaderPkmn.pokemonId}&leaderId=${this.state.selectedLeader.leaderId}&recordId=${recordId}`;
       })
       .catch(err => console.error(err));
 
