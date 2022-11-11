@@ -100,6 +100,31 @@ app.get('/api/leader-list/all', (req, res, next) => {
     .catch(err => next(err));
 });
 
+// GET: a specific leader's data from the DB
+
+app.get('/api/leader-list/:id', (req, res, next) => {
+  const id = req.params.id;
+  if (!id) {
+    throw new ClientError(400, 'id is required');
+  }
+
+  const sql = `
+    SELECT *
+    FROM "leaders"
+    WHERE "leaderId" = $1
+  `;
+  const params = [id];
+  db.query(sql, params)
+    .then(result => {
+      if (!result.rows[0]) {
+        throw new ClientError(400, 'leader does not exist');
+      } else {
+        res.status(200).json(result.rows[0]);
+      }
+    })
+    .catch(err => next(err));
+});
+
 // POST: create a battle for a record ID
 
 app.post('/api/battles/new', (req, res, next) => {
@@ -121,6 +146,53 @@ app.post('/api/battles/new', (req, res, next) => {
     })
     .then(record => {
       res.status(201).json(record);
+    })
+    .catch(err => next(err));
+});
+
+// PATCH: updates the record with the result of the battle
+
+app.patch('/api/battles/result', (req, res, next) => {
+  const { recordId, battleResult } = req.body;
+
+  const sql = `
+    SELECT * FROM "recordList"
+    WHERE "recordId" = $1
+  `;
+  const params = [recordId];
+  db.query(sql, params)
+    .then(result => {
+      if (!result.rows[0]) {
+        throw new ClientError(400, 'record does not exist');
+      } else {
+        return result.rows[0];
+      }
+    })
+    .then(record => {
+      if (record.result !== 'pending') {
+        throw new ClientError(400, 'battle has completed already');
+      } else {
+        const sql = `
+          UPDATE "recordList"
+          SET "result" = $1
+          WHERE "recordId" = $2
+          RETURNING *
+        `;
+        const params = [battleResult, recordId];
+
+        db.query(sql, params)
+          .then(result => {
+            if (!result.rows[0]) {
+              throw new ClientError(400, 'Something went wrong');
+            } else {
+              return result.rows[0];
+            }
+          })
+          .then(record => {
+            res.status(200).json(record);
+          })
+          .catch(err => next(err));
+      }
     })
     .catch(err => next(err));
 });
