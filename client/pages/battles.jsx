@@ -44,25 +44,45 @@ export default class Battles extends React.Component {
         }
       },
       battleResult: '',
-      params: {},
-      battleStatus: ''
+      params: {}
     };
 
     this.onMoveSelectHandler = this.onMoveSelectHandler.bind(this);
     this.battleHandler = this.battleHandler.bind(this);
     this.battleUpdater = this.battleUpdater.bind(this);
-
-    this.resultModal = new bootstrap.Modal('#battleResult', {
-      keyboard: false
-    });
+    this.returnHomeHandler = this.returnHomeHandler.bind(this);
   }
 
   componentDidMount() {
+    let dbBattleStatus = 'pending';
+
     const route = parseRoute(window.location.hash);
     const incParams = route.params;
     const newParams = {};
     for (const [item, value] of incParams.entries()) {
       newParams[`${item}`] = value;
+    }
+
+    fetch(`/api/battles/status/${newParams.recordId}`)
+      .then(res => {
+        if (!res.ok) {
+          throw new Error('Something went wrong.');
+        } else {
+          return res.json();
+        }
+      })
+      .then(status => {
+        dbBattleStatus = status;
+      })
+      .catch(err => console.error(err));
+
+    // using localStorage for battleStatus until auth is applied
+    const battleStatus = localStorage.getItem('battleStatus');
+
+    if (!battleStatus && dbBattleStatus === 'pending') {
+      localStorage.setItem('battleStatus', 'in progress');
+    } else if (!battleStatus && dbBattleStatus !== 'pending') {
+      localStorage.setItem('battleStatus', `complete: ${dbBattleStatus}`);
     }
 
     fetch(`/api/pkmn-list/${newParams.userPkmn}`)
@@ -129,8 +149,7 @@ export default class Battles extends React.Component {
         ...oldUser,
         userId: newParams.userPkmn
       },
-      params: newParams,
-      battleStatus: 'in progress'
+      params: newParams
     });
   }
 
@@ -154,9 +173,12 @@ export default class Battles extends React.Component {
         }
       })
       .then(record => {
-        this.setState({
-          battleStatus: 'complete'
-        });
+        // using localStorage for battleStatus until auth is applied
+        const battleStatus = localStorage.getItem('battleStatus');
+
+        if (battleStatus === 'in progress') {
+          localStorage.setItem('battleStatus', `complete: ${record.result}`);
+        }
       })
       .catch(err => console.error(err));
   }
@@ -168,64 +190,84 @@ export default class Battles extends React.Component {
       return Math.floor(Math.random() * (max - min + 1) + min); // The maximum is inclusive and the minimum is inclusive
     }
 
-    const leaderMove = getRandomIntInclusive(1, 3);
+    // using localStorage for battleStatus until auth is applied
+    const battleStatus = localStorage.getItem('battleStatus');
+    if (battleStatus.includes('complete')) {
+      const completedToast = document.getElementById('battleCompleted');
+      const toast = new bootstrap.Toast(completedToast);
 
-    if (leaderMove === 1) {
-      if (userMove === 1) {
-        this.setState({
-          battleResult: 'tie'
-        });
-        this.resultModal.show();
-      }
-      if (userMove === 2) {
-        this.setState({
-          battleResult: 'win'
-        });
-        this.battleUpdater('win');
-      }
-      if (userMove === 3) {
-        this.setState({
-          battleResult: 'loss'
-        });
-        this.battleUpdater('loss');
-      }
-    } else if (leaderMove === 2) {
-      if (userMove === 2) {
-        this.setState({
-          battleResult: 'tie'
-        });
-        this.resultModal.show();
-      }
-      if (userMove === 3) {
-        this.setState({
-          battleResult: 'win'
-        });
-        this.battleUpdater('win');
-      }
-      if (userMove === 1) {
-        this.setState({
-          battleResult: 'loss'
-        });
-        this.battleUpdater('loss');
-      }
-    } else if (leaderMove === 3) {
-      if (userMove === 3) {
-        this.setState({
-          battleResult: 'tie'
-        });
-        this.resultModal.show();
-      }
-      if (userMove === 1) {
-        this.setState({
-          battleResult: 'win'
-        });
-        this.battleUpdater('win');
-      }
-      if (userMove === 2) {
-        this.setState({
-          battleResult: 'loss'
-        });
-        this.battleUpdater('loss');
+      toast.show();
+    } else {
+      // initialize the result modal
+      const resultModal = new bootstrap.Modal('#battleResult', {
+        keyboard: false
+      });
+
+      const leaderMove = getRandomIntInclusive(1, 3);
+
+      if (leaderMove === 1) {
+        if (userMove === 1) {
+          this.setState({
+            battleResult: 'tie'
+          });
+          resultModal.show();
+        }
+        if (userMove === 2) {
+          this.setState({
+            battleResult: 'win'
+          });
+          this.battleUpdater('win');
+          resultModal.show();
+        }
+        if (userMove === 3) {
+          this.setState({
+            battleResult: 'loss'
+          });
+          this.battleUpdater('loss');
+          resultModal.show();
+        }
+      } else if (leaderMove === 2) {
+        if (userMove === 2) {
+          this.setState({
+            battleResult: 'tie'
+          });
+          resultModal.show();
+        }
+        if (userMove === 3) {
+          this.setState({
+            battleResult: 'win'
+          });
+          this.battleUpdater('win');
+          resultModal.show();
+        }
+        if (userMove === 1) {
+          this.setState({
+            battleResult: 'loss'
+          });
+          this.battleUpdater('loss');
+          resultModal.show();
+        }
+      } else if (leaderMove === 3) {
+        if (userMove === 3) {
+          this.setState({
+            battleResult: 'tie'
+          });
+          resultModal.show();
+        }
+        if (userMove === 1) {
+          this.setState({
+            battleResult: 'win'
+          });
+          this.battleUpdater('win');
+          resultModal.show();
+        }
+        if (userMove === 2) {
+          this.setState({
+            battleResult: 'loss'
+          });
+          this.battleUpdater('loss');
+          resultModal.show();
+        }
       }
     }
   }
@@ -237,6 +279,27 @@ export default class Battles extends React.Component {
       this.battleHandler(2);
     } else if (event.target.className === 'btn btn-warning') {
       this.battleHandler(3);
+    }
+
+    event.preventDefault();
+  }
+
+  returnHomeHandler(event) {
+    // using localStorage for battleStatus until auth is applied
+    const battleStatus = localStorage.getItem('battleStatus');
+
+    if (battleStatus === 'in progress') {
+      const inProgressToast = document.getElementById('battleInProgress');
+      const toast = new bootstrap.Toast(inProgressToast);
+
+      toast.show();
+    }
+
+    if (battleStatus.includes('complete')) {
+      // using localStorage until Auth is in place
+      localStorage.removeItem('battleStatus');
+
+      window.location.href = '#';
     }
 
     event.preventDefault();
@@ -291,8 +354,32 @@ export default class Battles extends React.Component {
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                {(this.state.battleResult === 'tie') ? <button type="button" className="btn btn-primary">Try Again</button> : <button type="button" className="btn btn-primary">Understood</button>}
+                {(this.state.battleResult === 'tie') ? <button type="button" className="btn btn-primary" data-bs-dismiss="modal">Try Again</button> : <button type="button" className="btn btn-primary" data-bs-dismiss="modal" onClick={this.returnHomeHandler}>Home</button>}
               </div>
+            </div>
+          </div>
+        </div>
+        <div className="toast-container position-fixed bottom-0 end-0 p-3">
+          <div id="battleInProgress" className="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div className="toast-header">
+              <strong className="me-auto">Warning!</strong>
+              <small>Battle Issue</small>
+              <button type="button" className="btn-close" data-bs-dismiss="toast" aria-label="Close" />
+            </div>
+            <div className="toast-body">
+              Battle has not yet concluded, please wait.
+            </div>
+          </div>
+        </div>
+        <div className="toast-container position-fixed bottom-0 end-0 p-3">
+          <div id="battleCompleted" className="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div className="toast-header">
+              <strong className="me-auto">Warning!</strong>
+              <small>Battle Issue</small>
+              <button type="button" className="btn-close" data-bs-dismiss="toast" aria-label="Close" />
+            </div>
+            <div className="toast-body">
+              Battle has already completed, please return to Home.
             </div>
           </div>
         </div>
