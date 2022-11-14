@@ -42,10 +42,19 @@ export default class Battles extends React.Component {
           sprite: '',
           statusMove: ''
         }
-      }
+      },
+      battleResult: '',
+      params: {},
+      battleStatus: ''
     };
 
     this.onMoveSelectHandler = this.onMoveSelectHandler.bind(this);
+    this.battleHandler = this.battleHandler.bind(this);
+    this.battleUpdater = this.battleUpdater.bind(this);
+
+    this.resultModal = new bootstrap.Modal('#battleResult', {
+      keyboard: false
+    });
   }
 
   componentDidMount() {
@@ -119,17 +128,115 @@ export default class Battles extends React.Component {
       user: {
         ...oldUser,
         userId: newParams.userPkmn
-      }
+      },
+      params: newParams,
+      battleStatus: 'in progress'
     });
+  }
+
+  battleUpdater(result) {
+    const battleData = {
+      recordId: this.state.params.recordId,
+      battleResult: result
+    };
+    fetch('/api/battles/result', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(battleData)
+    })
+      .then(res => {
+        if (!res.ok) {
+          throw new Error('Something went wrong.');
+        } else {
+          return res.json();
+        }
+      })
+      .then(record => {
+        this.setState({
+          battleStatus: 'complete'
+        });
+      })
+      .catch(err => console.error(err));
+  }
+
+  battleHandler(userMove) {
+    function getRandomIntInclusive(min, max) {
+      min = Math.ceil(min);
+      max = Math.floor(max);
+      return Math.floor(Math.random() * (max - min + 1) + min); // The maximum is inclusive and the minimum is inclusive
+    }
+
+    const leaderMove = getRandomIntInclusive(1, 3);
+
+    if (leaderMove === 1) {
+      if (userMove === 1) {
+        this.setState({
+          battleResult: 'tie'
+        });
+        this.resultModal.show();
+      }
+      if (userMove === 2) {
+        this.setState({
+          battleResult: 'win'
+        });
+        this.battleUpdater('win');
+      }
+      if (userMove === 3) {
+        this.setState({
+          battleResult: 'loss'
+        });
+        this.battleUpdater('loss');
+      }
+    } else if (leaderMove === 2) {
+      if (userMove === 2) {
+        this.setState({
+          battleResult: 'tie'
+        });
+        this.resultModal.show();
+      }
+      if (userMove === 3) {
+        this.setState({
+          battleResult: 'win'
+        });
+        this.battleUpdater('win');
+      }
+      if (userMove === 1) {
+        this.setState({
+          battleResult: 'loss'
+        });
+        this.battleUpdater('loss');
+      }
+    } else if (leaderMove === 3) {
+      if (userMove === 3) {
+        this.setState({
+          battleResult: 'tie'
+        });
+        this.resultModal.show();
+      }
+      if (userMove === 1) {
+        this.setState({
+          battleResult: 'win'
+        });
+        this.battleUpdater('win');
+      }
+      if (userMove === 2) {
+        this.setState({
+          battleResult: 'loss'
+        });
+        this.battleUpdater('loss');
+      }
+    }
   }
 
   onMoveSelectHandler(event) {
     if (event.target.className === 'btn btn-success') {
-      alert(event.target.textContent);
+      this.battleHandler(1);
     } else if (event.target.className === 'btn btn-danger') {
-      alert(event.target.textContent);
+      this.battleHandler(2);
     } else if (event.target.className === 'btn btn-warning') {
-      alert(event.target.textContent);
+      this.battleHandler(3);
     }
 
     event.preventDefault();
@@ -168,6 +275,23 @@ export default class Battles extends React.Component {
                   <button type="button" className="btn btn-danger" onClick={this.onMoveSelectHandler}>Special: {this.state.user.pkmn.specialMove}</button>
                   <button type="button" className="btn btn-warning" onClick={this.onMoveSelectHandler}>Status: {this.state.user.pkmn.statusMove}</button>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="modal fade" id="battleResult" data-bs-backdrop="static" data-bs-keyboard="false" tabIndex="-1" aria-labelledby="battleResultLabel" aria-hidden="true">
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h1 className="modal-title fs-5" id="battleResultLabel">Modal title</h1>
+                <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close" />
+              </div>
+              <div className="modal-body">
+                Battle result: {this.state.battleResult}
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                {(this.state.battleResult === 'tie') ? <button type="button" className="btn btn-primary">Try Again</button> : <button type="button" className="btn btn-primary">Understood</button>}
               </div>
             </div>
           </div>
