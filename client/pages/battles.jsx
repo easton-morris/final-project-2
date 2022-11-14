@@ -140,9 +140,9 @@ export default class Battles extends React.Component {
       <div className="container">
         <div className="row justify-content-center">
           <div className="col-md-8 text-center">
-            <div className="card">
+            <div className="card m-2">
               <div className='container text-center'>
-                <img src={this.state.opponent.leader.leaderPic} className="" alt={`${this.state.opponent.leader.leaderName} Picture`} />
+                <img src={this.state.opponent.leader.leaderPic} className="small-img" alt={`${this.state.opponent.leader.leaderName} Picture`} />
               </div>
               <div className="card-body">
                 <h5 className="card-title">{this.state.opponent.leader.leaderName}</h5>
@@ -157,15 +157,17 @@ export default class Battles extends React.Component {
             </div>
           </div>
         </div>
-        <div className="row">
-          <div className="card">
-            <img src={this.state.user.pkmn.sprite} className="card-img-top" alt={`${this.state.user.pkmn.pkmnName} Picture`} />
-            <div className="card-body text-center">
-              <h5 className="card-title">{this.state.user.pkmn.pkmnName}</h5>
-              <div className="btn-group btn-group-lg" role="group" aria-label="Basic mixed styles example">
-                <button type="button" className="btn btn-success" onClick={this.onMoveSelectHandler}>Physical: {this.state.user.pkmn.physicalMove}</button>
-                <button type="button" className="btn btn-danger" onClick={this.onMoveSelectHandler}>Special: {this.state.user.pkmn.specialMove}</button>
-                <button type="button" className="btn btn-warning" onClick={this.onMoveSelectHandler}>Status: {this.state.user.pkmn.statusMove}</button>
+        <div className="row justify-content-center">
+          <div className="col-md-8 text-center">
+            <div className="card m-2">
+              <div className="card-body text-center">
+                <img src={this.state.user.pkmn.sprite} className="small-img" alt={`${this.state.user.pkmn.pkmnName} Picture`} />
+                <p className="card-title">Your Pok&eacute;mon: <strong>{this.state.user.pkmn.pkmnName}</strong></p>
+                <div className="btn-group btn-group-lg" role="group" aria-label="Basic mixed styles example">
+                  <button type="button" className="btn btn-success" onClick={this.onMoveSelectHandler}>Physical: {this.state.user.pkmn.physicalMove}</button>
+                  <button type="button" className="btn btn-danger" onClick={this.onMoveSelectHandler}>Special: {this.state.user.pkmn.specialMove}</button>
+                  <button type="button" className="btn btn-warning" onClick={this.onMoveSelectHandler}>Status: {this.state.user.pkmn.statusMove}</button>
+                </div>
               </div>
             </div>
           </div>
