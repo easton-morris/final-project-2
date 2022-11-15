@@ -125,6 +125,34 @@ app.get('/api/leader-list/:id', (req, res, next) => {
     .catch(err => next(err));
 });
 
+// GET: get status of a battle for a record ID
+
+app.post('/api/battles/status/:id', (req, res, next) => {
+  const id = req.params.id;
+  if (!id) {
+    throw new ClientError(400, 'id is required');
+  }
+
+  const sql = `
+    SELECT "result"
+    FROM "recordList"
+    WHERE "recordId" = $1
+  `;
+  const params = [id];
+  db.query(sql, params)
+    .then(result => {
+      if (!result.rows[0]) {
+        throw new ClientError(400, 'Something went wrong');
+      } else {
+        return result.rows[0];
+      }
+    })
+    .then(record => {
+      res.status(201).json(record);
+    })
+    .catch(err => next(err));
+});
+
 // POST: create a battle for a record ID
 
 app.post('/api/battles/new', (req, res, next) => {
