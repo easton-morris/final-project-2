@@ -1,6 +1,9 @@
 require('dotenv/config');
 const pg = require('pg');
+const argon2 = require('argon2');
+const jwt = require('jsonwebtoken');
 const express = require('express');
+const authorizationMiddleware = require('./authorization-middleware');
 const staticMiddleware = require('./static-middleware');
 const errorMiddleware = require('./error-middleware');
 const ClientError = require('./client-error');
@@ -19,6 +22,90 @@ app.use(staticMiddleware);
 const jsonMiddleware = express.json();
 
 app.use(jsonMiddleware);
+
+// PATCH>> checks a user's password to make sure it matches before signing in
+
+app.patch('/api/users/sign-in', (req, res, next) => {
+  let userId = null;
+  const { username, password } = req.body;
+  if (!username || !password) {
+    throw new ClientError(400, 'username and password are required fields');
+  }
+
+  const sql = `
+    SELECT *
+    FROM "users"
+    WHERE "username" = $1
+  `;
+  const params = [username];
+  db.query(sql, params)
+    .then(result => {
+      if (!result.rows[0]) {
+        throw new ClientError(401, 'invalid login');
+      } else {
+        userId = result.rows[0].userId;
+        argon2.verify(result.rows[0].hashPw, password)
+          .then(result => {
+            if (!result) {
+              throw new ClientError(401, 'invlaid login');
+            }
+            const payload = { userId, username, ts: Date.now() };
+            const token = jwt.sign(payload, process.env.TOKEN_SECRET);
+            res.json({ token, user: payload });
+          })
+          .catch(err => next(err));
+      }
+    })
+    .catch(err => next(err));
+});
+
+// POST>> adds a user and their hashed password to the db //
+
+app.post('/api/users/sign-up', (req, res, next) => {
+  const { username, email, password } = req.body;
+  if (!username || !password) {
+    throw new ClientError(400, 'username and password are required fields');
+  }
+
+  const sql = `
+    SELECT *
+    FROM "users"
+    WHERE "username" = $1
+  `;
+  const params = [username];
+  db.query(sql, params)
+    .then(result => {
+      if (result.rows[0]) {
+        throw new ClientError(409, 'username already exists');
+      } else {
+        argon2.hash(password)
+          .then(hashedPW => {
+            const sql = `
+             INSERT INTO "users" ("username", "email", "hashPw")
+             VALUES ($1, $2, $3)
+             RETURNING *
+            `;
+            const params = [username, email, hashedPW];
+            db.query(sql, params)
+              .then(result => {
+                const [newSignUp] = result.rows;
+                const newUserId = newSignUp.userId;
+
+                const payload = { newUserId, username, ts: Date.now() };
+                const token = jwt.sign(payload, process.env.TOKEN_SECRET);
+                res.status(201).json({ token, user: payload, newSignUp });
+              })
+              .catch(err => next(err));
+          })
+          .catch(err => next(err));
+      }
+    })
+    .catch(err => next(err));
+
+});
+
+// ROUTES THAT USE AUTHORIZATION //
+app.use(authorizationMiddleware);
 
 // GET: all of the pkmn listed in the DB
 
