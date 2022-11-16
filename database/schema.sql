@@ -12,7 +12,7 @@ CREATE TABLE "public"."users" (
 	"password" text NOT NULL,
 	"email" text NOT NULL UNIQUE,
 	"createdAt" TIMESTAMPTZ NOT NULL default now(),
-	"userPkmn" integer,
+	"userPkmn" integer DEFAULT 1,
 	CONSTRAINT "users_pk" PRIMARY KEY ("userId")
 ) WITH (
   OIDS=FALSE

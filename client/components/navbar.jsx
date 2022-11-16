@@ -35,7 +35,7 @@ export default function NavBar(props) {
               </ul>
             </li>
             <li className='nav-item'>
-              <a className='nav-link disabled'>Disabled</a>
+              <a className='nav-link disabled'>Logout</a>
             </li>
           </ul>
         </div>
