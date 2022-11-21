@@ -7,6 +7,10 @@ import '../scss/styles.scss';
 // eslint-disable-next-line
 import * as bootstrap from 'bootstrap';
 
+// Import all of Bootstrap's icon
+// eslint-disable-next-line
+import * as icons from 'bootstrap-icons';
+
 export default function NavBar(props) {
   return (
     <nav className='navbar navbar-expand-lg bg-light'>
@@ -38,6 +42,9 @@ export default function NavBar(props) {
               <a className='nav-link disabled'>Logout</a>
             </li>
           </ul>
+          <button className="btn btn-outline-success d-flex" aria-label='Profile Button'>
+            <svg className="bi bi-person-circle" aria-hidden="true" />
+          </button>
         </div>
       </div>
     </nav>
