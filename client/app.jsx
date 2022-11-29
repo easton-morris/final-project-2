@@ -24,7 +24,7 @@ export default class App extends React.Component {
 
   getUserInfo() {
     const currUser = JSON.parse(window.localStorage.getItem('currentUser'));
-    if (currUser && this.state.userPkmnInfo !== currUser.userPkmnInfo) {
+    if (currUser && this.state.user !== currUser) {
       fetch(`/api/pkmn-list/${currUser.user.userPkmn}`, {
         method: 'GET',
         headers: {
@@ -64,8 +64,10 @@ export default class App extends React.Component {
     });
   }
 
-  componentDidUpdate() {
-    this.getUserInfo();
+  componentDidUpdate(prevProps, prevState) {
+    if (prevProps !== this.props) {
+      this.getUserInfo();
+    }
   }
 
   renderPage() {

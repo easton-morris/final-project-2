@@ -1,4 +1,5 @@
 import React from 'react';
+import AppContext from '../lib/app-context';
 
 // Import custom CSS
 import '../scss/styles.scss';
@@ -24,7 +25,13 @@ export default class GymLeaders extends React.Component {
 
   componentDidMount() {
 
-    fetch('/api/leader-list/all')
+    fetch('/api/leader-list/all', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-access-token': this.context.user.token
+      }
+    })
       .then(res => {
         if (!res.ok) {
           throw new Error('Something went wrong.');
@@ -92,13 +99,11 @@ export default class GymLeaders extends React.Component {
     event.preventDefault();
   }
 
-  // userId and userPkmn in the query string until I have auth set up, along with a bunch of other data
-
   battleHandler(event) {
     let recordId;
     const battleData = {
-      userId: 1,
-      userPkmn: 1,
+      userId: this.context.user.user.userId,
+      userPkmn: this.context.user.user.userPkmn,
       leaderPkmn: this.state.selectedLeader.leaderPkmn.pokemonId,
       leaderName: this.state.selectedLeader.leaderName
     };
@@ -106,7 +111,8 @@ export default class GymLeaders extends React.Component {
     fetch('/api/battles/new', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'x-access-token': this.context.user.token
       },
       body: JSON.stringify(battleData)
     })
@@ -162,3 +168,5 @@ export default class GymLeaders extends React.Component {
     }
   }
 }
+
+GymLeaders.contextType = AppContext;
