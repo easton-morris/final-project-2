@@ -6,7 +6,7 @@ import GymLeaders from './pages/gym-leaders';
 import Battles from './pages/battles';
 import NotFound from './pages/not-found';
 
-import { parseRoute } from './lib';
+import { parseRoute, AppContext } from './lib';
 
 export default class App extends React.Component {
 
@@ -40,12 +40,15 @@ export default class App extends React.Component {
   }
 
   render() {
+    const contextVal = {};
     return (
-      <>
-        <NavBar />
-        <PokePicker />
-        {this.renderPage()}
-      </>
+      <AppContext.Provider value={contextVal} >
+        <>
+          <NavBar />
+          <PokePicker />
+          {this.renderPage()}
+        </>
+      </AppContext.Provider>
     );
   }
 }
