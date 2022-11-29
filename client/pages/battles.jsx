@@ -1,4 +1,5 @@
 import React from 'react';
+import AppContext from '../lib/app-context';
 
 // Import custom CSS
 import '../scss/styles.scss';
@@ -63,94 +64,123 @@ export default class Battles extends React.Component {
       newParams[`${item}`] = value;
     }
 
-    fetch(`/api/battles/status/${newParams.recordId}`)
-      .then(res => {
-        if (!res.ok) {
-          throw new Error('Something went wrong.');
-        } else {
-          return res.json();
-        }
-      })
-      .then(status => {
-        dbBattleStatus = status;
-      })
-      .catch(err => console.error(err));
-
-    // using localStorage for battleStatus until auth is applied
+    const currUser = JSON.parse(window.localStorage.getItem('currentUser'));
     const battleStatus = localStorage.getItem('battleStatus');
 
-    if (!battleStatus && dbBattleStatus === 'pending') {
-      localStorage.setItem('battleStatus', 'in progress');
-    } else if (!battleStatus && dbBattleStatus !== 'pending') {
-      localStorage.setItem('battleStatus', `complete: ${dbBattleStatus}`);
+    if (currUser && !battleStatus) {
+      fetch(`/api/battles/status/${newParams.recordId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-access-token': currUser.token
+        }
+      })
+        .then(res => {
+          if (!res.ok) {
+            throw new Error('Something went wrong.');
+          } else {
+            return res.json();
+          }
+        })
+        .then(status => {
+          dbBattleStatus = status;
+        })
+        .catch(err => console.error(err));
+
+      // using localStorage for battleStatus until auth is applied
+      const battleStatus = localStorage.getItem('battleStatus');
+
+      if (!battleStatus && dbBattleStatus === 'pending') {
+        localStorage.setItem('battleStatus', 'in progress');
+      } else if (!battleStatus && dbBattleStatus !== 'pending') {
+        localStorage.setItem('battleStatus', `complete: ${dbBattleStatus}`);
+      }
+
+      fetch(`/api/pkmn-list/${newParams.userPkmn}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-access-token': currUser.token
+        }
+      })
+        .then(res => {
+          if (!res.ok) {
+            throw new Error('Something went wrong.');
+          } else {
+            return res.json();
+          }
+        })
+        .then(newPkmn => {
+          const oldUser = this.state.user;
+          this.setState({
+            user: {
+              ...oldUser,
+              pkmn: newPkmn
+            }
+          });
+        })
+        .catch(err => console.error(err));
+
+      fetch(`/api/pkmn-list/${newParams.leaderPkmn}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-access-token': currUser.token
+        }
+      })
+        .then(res => {
+          if (!res.ok) {
+            throw new Error('Something went wrong.');
+          } else {
+            return res.json();
+          }
+        })
+        .then(newPkmn => {
+          const oldOpp = this.state.opponent;
+          this.setState({
+            opponent: {
+              ...oldOpp,
+              pkmn: newPkmn
+            }
+          });
+        })
+        .catch(err => console.error(err));
+
+      fetch(`/api/leader-list/${newParams.leaderId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-access-token': currUser.token
+        }
+      })
+        .then(res => {
+          if (!res.ok) {
+            throw new Error('Something went wrong.');
+          } else {
+            return res.json();
+          }
+        })
+        .then(newLeader => {
+          const oldOpp = this.state.opponent;
+          this.setState({
+            opponent: {
+              ...oldOpp,
+              leader: newLeader
+            }
+          });
+        })
+        .catch(err => console.error(err));
+
+      const oldUser = this.state.user;
+
+      this.setState({
+        user: {
+          ...oldUser,
+          userId: newParams.userPkmn
+        },
+        params: newParams
+      });
     }
-
-    fetch(`/api/pkmn-list/${newParams.userPkmn}`)
-      .then(res => {
-        if (!res.ok) {
-          throw new Error('Something went wrong.');
-        } else {
-          return res.json();
-        }
-      })
-      .then(newPkmn => {
-        const oldUser = this.state.user;
-        this.setState({
-          user: {
-            ...oldUser,
-            pkmn: newPkmn
-          }
-        });
-      })
-      .catch(err => console.error(err));
-
-    fetch(`/api/pkmn-list/${newParams.leaderPkmn}`)
-      .then(res => {
-        if (!res.ok) {
-          throw new Error('Something went wrong.');
-        } else {
-          return res.json();
-        }
-      })
-      .then(newPkmn => {
-        const oldOpp = this.state.opponent;
-        this.setState({
-          opponent: {
-            ...oldOpp,
-            pkmn: newPkmn
-          }
-        });
-      })
-      .catch(err => console.error(err));
-
-    fetch(`/api/leader-list/${newParams.leaderId}`)
-      .then(res => {
-        if (!res.ok) {
-          throw new Error('Something went wrong.');
-        } else {
-          return res.json();
-        }
-      })
-      .then(newLeader => {
-        const oldOpp = this.state.opponent;
-        this.setState({
-          opponent: {
-            ...oldOpp,
-            leader: newLeader
-          }
-        });
-      })
-      .catch(err => console.error(err));
-
-    const oldUser = this.state.user;
-
-    this.setState({
-      user: {
-        ...oldUser,
-        userId: newParams.userPkmn
-      },
-      params: newParams
-    });
   }
 
   battleUpdater(result) {
@@ -161,7 +191,8 @@ export default class Battles extends React.Component {
     fetch('/api/battles/result', {
       method: 'PATCH',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'x-access-token': this.context.user.token
       },
       body: JSON.stringify(battleData)
     })
@@ -387,3 +418,5 @@ export default class Battles extends React.Component {
     );
   }
 }
+
+Battles.contextType = AppContext;

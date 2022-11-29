@@ -271,7 +271,7 @@ app.get('/api/leader-list/:id', (req, res, next) => {
 
 // GET: get status of a battle for a record ID
 
-app.post('/api/battles/status/:id', (req, res, next) => {
+app.get('/api/battles/status/:id', (req, res, next) => {
   const id = req.params.id;
   if (!id) {
     throw new ClientError(400, 'id is required');
