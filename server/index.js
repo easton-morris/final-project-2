@@ -44,12 +44,13 @@ app.patch('/api/users/sign-in', (req, res, next) => {
         throw new ClientError(401, 'invalid login');
       } else {
         userId = result.rows[0].userId;
-        argon2.verify(result.rows[0].hashPw, password)
+        const userPkmn = result.rows[0].userPkmn;
+        argon2.verify(result.rows[0].hashPassword, password)
           .then(result => {
             if (!result) {
-              throw new ClientError(401, 'invlaid login');
+              throw new ClientError(401, 'invalid login');
             }
-            const payload = { userId, username, ts: Date.now() };
+            const payload = { userId, username, userPkmn, ts: Date.now() };
             const token = jwt.sign(payload, process.env.TOKEN_SECRET);
             res.json({ token, user: payload });
           })
@@ -81,7 +82,7 @@ app.post('/api/users/sign-up', (req, res, next) => {
         argon2.hash(password)
           .then(hashedPW => {
             const sql = `
-             INSERT INTO "users" ("username", "email", "hashPw")
+             INSERT INTO "users" ("username", "email", "hashPassword")
              VALUES ($1, $2, $3)
              RETURNING *
             `;
@@ -90,8 +91,9 @@ app.post('/api/users/sign-up', (req, res, next) => {
               .then(result => {
                 const [newSignUp] = result.rows;
                 const newUserId = newSignUp.userId;
+                const userPkmn = newSignUp.userPkmn;
 
-                const payload = { newUserId, username, ts: Date.now() };
+                const payload = { newUserId, username, userPkmn, ts: Date.now() };
                 const token = jwt.sign(payload, process.env.TOKEN_SECRET);
                 res.status(201).json({ token, user: payload, newSignUp });
               })

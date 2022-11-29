@@ -5,3 +5,20 @@
 .small-img {
   max-width: 20%;
 }
+
+.bi-person-circle {
+  height: 1em;
+  width: 1em;
+  font-size: xx-large;
+  margin: 0.125em;
+  display: inherit;
+}
+
+.login-btn {
+  margin: 0;
+  align-self: center;
+}
+
+.user-pkmn-badge {
+  width: 10%;
+}
