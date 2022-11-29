@@ -106,9 +106,6 @@ app.post('/api/users/sign-up', (req, res, next) => {
 
 });
 
-// ROUTES THAT USE AUTHORIZATION //
-app.use(authorizationMiddleware);
-
 // GET: all of the pkmn listed in the DB
 
 app.get('/api/pkmn-list/all', (req, res, next) => {
@@ -119,6 +116,64 @@ app.get('/api/pkmn-list/all', (req, res, next) => {
   db.query(sql)
     .then(result => {
       res.json(result.rows);
+    })
+    .catch(err => next(err));
+});
+
+// ROUTES THAT USE AUTHORIZATION //
+app.use(authorizationMiddleware);
+
+// PATCH: update user with newly selected pkmn
+
+app.patch('/api/user-pkmn/:id', (req, res, next) => {
+  const id = req.params.id;
+  if (!id) {
+    throw new ClientError(400, 'id is required');
+  }
+
+  const { pokemon } = req.body;
+  if (!pokemon) {
+    throw new ClientError(400, 'must specify new pokemon id');
+  }
+
+  const sql = `
+    SELECT * FROM "users"
+    WHERE "userId" = $1
+  `;
+  const params = [id];
+  db.query(sql, params)
+    .then(result => {
+      if (!result.rows[0]) {
+        throw new ClientError(400, 'user does not exist');
+      } else {
+        return result.rows[0];
+      }
+    })
+    .then(user => {
+      if (user.userPkmn === pokemon) {
+        throw new ClientError(400, 'user has already picked this pokemon');
+      } else {
+        const sql = `
+          UPDATE "users"
+          SET "userPkmn" = $1
+          WHERE "userId" = $2
+          RETURNING "userId", "userPkmn"
+        `;
+        const params = [pokemon, id];
+
+        db.query(sql, params)
+          .then(result => {
+            if (!result.rows[0]) {
+              throw new ClientError(400, 'Something went wrong');
+            } else {
+              return result.rows[0];
+            }
+          })
+          .then(updatedUser => {
+            res.status(200).json(updatedUser);
+          })
+          .catch(err => next(err));
+      }
     })
     .catch(err => next(err));
 });

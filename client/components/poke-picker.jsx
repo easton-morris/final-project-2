@@ -1,4 +1,5 @@
 import React from 'react';
+import AppContext from '../lib/app-context';
 
 // Import custom CSS
 import '../scss/styles.scss';
@@ -32,7 +33,7 @@ export default class PokePicker extends React.Component {
   }
 
   componentDidMount() {
-    const usersMon = JSON.parse(localStorage.getItem('userPkmn'));
+    const usersMon = this.context.userPkmn;
     if (usersMon) {
       this.setState({
         userPkmn: usersMon,
@@ -48,8 +49,35 @@ export default class PokePicker extends React.Component {
         userPkmn: this.state.displayPkmn
       });
 
-      // set in localStorage until i get sign in working //
-      localStorage.setItem('userPkmn', JSON.stringify(this.state.displayPkmn));
+      const newPkmn = this.state.displayPkmn;
+
+      if (this.context.user) {
+        fetch(`/api/user-pkmn/${this.context.user.user.userId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-access-token': this.context.user.token
+          },
+          body: JSON.stringify({
+            pokemon: newPkmn.pokemonId
+          })
+        })
+          .then(res => {
+            if (!res.ok) {
+              throw new Error('Something went wrong.');
+            } else {
+              return res.json();
+            }
+          })
+          .then(newUserInfo => {
+            let currUser = JSON.parse(window.localStorage.getItem('currentUser'));
+            const currUserData = currUser.user;
+            currUser = { ...currUser, user: { ...currUserData, userPkmn: newUserInfo.userPkmn } };
+
+            window.localStorage.setItem('currentUser', JSON.stringify(currUser));
+            this.context.getUserInfo();
+          });
+      }
 
       const pokeSuccessToast = document.getElementById('pokeSuccess');
       const toast = new bootstrap.Toast(pokeSuccessToast);
@@ -179,3 +207,5 @@ export default class PokePicker extends React.Component {
     );
   }
 }
+
+PokePicker.contextType = AppContext;

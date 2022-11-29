@@ -64,7 +64,7 @@ export default class NavBar extends React.Component {
                 <i className="bi bi-person-circle" aria-hidden="true" />
                 <p className='login-btn'>Login</p>
               </button>
-              : <img className='user-pkmn-badge rounded-circle img-thumbnail' src={this.context.userPkmn ? this.context.userPkmn.sprite : ''} alt="User's Pokemon" />
+              : <img className='user-pkmn-badge rounded-circle img-thumbnail' src={this.context.userPkmnInfo ? this.context.userPkmnInfo.sprite : ''} alt="User's Pokemon" />
               }
           </div>
         </div>

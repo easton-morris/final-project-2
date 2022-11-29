@@ -15,15 +15,16 @@ export default class App extends React.Component {
     super(props);
     this.state = {
       route: parseRoute(window.location.hash),
-      userPkmn: null
+      userPkmnInfo: null,
+      user: null
     };
 
-    this.getUserPkmnInfo = this.getUserPkmnInfo.bind(this);
+    this.getUserInfo = this.getUserInfo.bind(this);
   }
 
-  getUserPkmnInfo() {
+  getUserInfo() {
     const currUser = JSON.parse(window.localStorage.getItem('currentUser'));
-    if (currUser && this.state.userPkmn === null) {
+    if (currUser && this.state.userPkmnInfo !== currUser.userPkmnInfo) {
       fetch(`/api/pkmn-list/${currUser.user.userPkmn}`, {
         method: 'GET',
         headers: {
@@ -40,19 +41,21 @@ export default class App extends React.Component {
         })
         .then(pkmnInfo => {
           return this.setState({
-            userPkmn: pkmnInfo
+            userPkmnInfo: pkmnInfo,
+            user: currUser
           });
         })
         .catch(err => console.error(err));
-    } else if (!currUser && this.state.userPkmn !== null) {
+    } else if (!currUser && this.state.userPkmnInfo !== null) {
       this.setState({
-        userPkmn: null
+        userPkmnInfo: null,
+        user: null
       });
     }
   }
 
   componentDidMount() {
-    this.getUserPkmnInfo();
+    this.getUserInfo();
 
     window.addEventListener('hashchange', () => {
       this.setState(prevState => (
@@ -62,7 +65,7 @@ export default class App extends React.Component {
   }
 
   componentDidUpdate() {
-    this.getUserPkmnInfo();
+    this.getUserInfo();
   }
 
   renderPage() {
@@ -83,8 +86,9 @@ export default class App extends React.Component {
   }
 
   render() {
-    const { userPkmn } = this.state;
-    const contextVal = { userPkmn };
+    const { getUserInfo } = this;
+    const { userPkmnInfo, user } = this.state;
+    const contextVal = { userPkmnInfo, user, getUserInfo };
     return (
       <AppContext.Provider value={contextVal} >
         <>
