@@ -369,6 +369,35 @@ app.patch('/api/battles/result', (req, res, next) => {
     .catch(err => next(err));
 });
 
+// GET: get a specific user's battle record history
+
+app.get('/api/battles/history/:id', (req, res, next) => {
+  const id = req.params.id;
+
+  if (!id) {
+    throw new ClientError(400, 'id is required');
+  }
+
+  const sql = `
+    SELECT *
+    FROM "recordList"
+    WHERE "userId" = $1
+  `;
+  const params = [id];
+  db.query(sql, params)
+    .then(result => {
+      if (!result.rows[0]) {
+        throw new ClientError(400, 'Something went wrong');
+      } else {
+        return result.rows;
+      }
+    })
+    .then(records => {
+      res.status(201).json(records);
+    })
+    .catch(err => next(err));
+});
+
 app.use(errorMiddleware);
 
 app.listen(process.env.PORT, () => {
