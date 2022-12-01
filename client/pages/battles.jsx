@@ -45,6 +45,7 @@ export default class Battles extends React.Component {
         }
       },
       battleResult: '',
+      battleStatus: null,
       params: {}
     };
 
@@ -55,7 +56,9 @@ export default class Battles extends React.Component {
   }
 
   componentDidMount() {
-    let dbBattleStatus = 'pending';
+    this.context.getUserBattleInfo();
+    window.localStorage.removeItem('currentBattle');
+    let currBattle = null;
 
     const route = parseRoute(window.location.hash);
     const incParams = route.params;
@@ -65,38 +68,26 @@ export default class Battles extends React.Component {
     }
 
     const currUser = JSON.parse(window.localStorage.getItem('currentUser'));
-    const battleStatus = localStorage.getItem('battleStatus');
+    let currBattleHistory = JSON.parse(window.localStorage.getItem('battleHistory'));
+    const currUserPkmn = JSON.parse(window.localStorage.getItem('currentUserPkmn'));
 
-    if (currUser && !battleStatus) {
-      fetch(`/api/battles/status/${newParams.recordId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-access-token': currUser.token
-        }
-      })
-        .then(res => {
-          if (!res.ok) {
-            throw new Error('Something went wrong.');
-          } else {
-            return res.json();
+    if (currBattleHistory) {
+      this.context.getUserBattleInfo();
+      currBattleHistory = JSON.parse(window.localStorage.getItem('battleHistory'));
+
+      currBattleHistory.forEach(battle => {
+        if (battle.recordId.toString() === newParams.recordId) {
+          currBattle = battle;
+          if (currBattle) {
+            window.localStorage.setItem('currentBattle', JSON.stringify(currBattle));
           }
-        })
-        .then(status => {
-          dbBattleStatus = status;
-        })
-        .catch(err => console.error(err));
+        }
+      });
+    }
 
-      // using localStorage for battleStatus until auth is applied
-      const battleStatus = localStorage.getItem('battleStatus');
+    if (currUser) {
 
-      if (!battleStatus && dbBattleStatus === 'pending') {
-        localStorage.setItem('battleStatus', 'in progress');
-      } else if (!battleStatus && dbBattleStatus !== 'pending') {
-        localStorage.setItem('battleStatus', `complete: ${dbBattleStatus}`);
-      }
-
-      fetch(`/api/pkmn-list/${newParams.userPkmn}`, {
+      fetch(`/api/pkmn-list/${currUserPkmn.pokemonId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -121,7 +112,7 @@ export default class Battles extends React.Component {
         })
         .catch(err => console.error(err));
 
-      fetch(`/api/pkmn-list/${newParams.leaderPkmn}`, {
+      fetch(`/api/pkmn-list/${currBattle.leaderPkmn}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -146,7 +137,7 @@ export default class Battles extends React.Component {
         })
         .catch(err => console.error(err));
 
-      fetch(`/api/leader-list/${newParams.leaderId}`, {
+      fetch(`/api/leader-list/${currBattle.leaderId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -176,14 +167,17 @@ export default class Battles extends React.Component {
       this.setState({
         user: {
           ...oldUser,
-          userId: newParams.userPkmn
+          userId: currUserPkmn.pokemonId
         },
         params: newParams
       });
+    } else if (!currUser) {
+      console.error('Must be logged in.');
     }
   }
 
   battleUpdater(result) {
+    const currUser = JSON.parse(window.localStorage.getItem('currentUser'));
     const battleData = {
       recordId: this.state.params.recordId,
       battleResult: result
@@ -192,7 +186,7 @@ export default class Battles extends React.Component {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
-        'x-access-token': this.context.user.token
+        'x-access-token': currUser.token
       },
       body: JSON.stringify(battleData)
     })
@@ -204,11 +198,11 @@ export default class Battles extends React.Component {
         }
       })
       .then(record => {
-        // using localStorage for battleStatus until auth is applied
-        const battleStatus = localStorage.getItem('battleStatus');
+        const currBattle = JSON.parse(window.localStorage.getItem('currentBattle'));
 
-        if (battleStatus === 'in progress') {
-          localStorage.setItem('battleStatus', `complete: ${record.result}`);
+        if (currBattle.result === 'pending') {
+          currBattle.result = record.result;
+          window.localStorage.setItem('currentBattle', JSON.stringify(currBattle));
         }
       })
       .catch(err => console.error(err));
@@ -221,9 +215,31 @@ export default class Battles extends React.Component {
       return Math.floor(Math.random() * (max - min + 1) + min); // The maximum is inclusive and the minimum is inclusive
     }
 
-    // using localStorage for battleStatus until auth is applied
-    const battleStatus = localStorage.getItem('battleStatus');
-    if (battleStatus.includes('complete')) {
+    const currUser = JSON.parse(window.localStorage.getItem('currentUser'));
+    const currBattle = JSON.parse(window.localStorage.getItem('currentBattle'));
+    // check the status to make sure battle hasn't already completed
+    fetch(`/api/battles/status/${currBattle.recordId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-access-token': currUser.token
+      }
+    })
+      .then(res => {
+        if (!res.ok) {
+          throw new Error('Something went wrong.');
+        } else {
+          return res.json();
+        }
+      })
+      .then(status => {
+        this.setState({
+          battleStatus: status.result
+        });
+      })
+      .catch(err => console.error(err));
+
+    if (currBattle.result !== 'pending' || this.state.battleStatus !== 'pending') {
       const completedToast = document.getElementById('battleCompleted');
       const toast = new bootstrap.Toast(completedToast);
 
@@ -316,19 +332,17 @@ export default class Battles extends React.Component {
   }
 
   returnHomeHandler(event) {
-    // using localStorage for battleStatus until auth is applied
-    const battleStatus = localStorage.getItem('battleStatus');
+    const currBattle = JSON.parse(window.localStorage.getItem('currentBattle'));
 
-    if (battleStatus === 'in progress') {
+    if (currBattle.result === 'pending') {
       const inProgressToast = document.getElementById('battleInProgress');
       const toast = new bootstrap.Toast(inProgressToast);
 
       toast.show();
     }
 
-    if (battleStatus.includes('complete')) {
-      // using localStorage until Auth is in place
-      localStorage.removeItem('battleStatus');
+    if (currBattle.result !== 'pending') {
+      window.localStorage.removeItem('currentBattle');
 
       window.location.href = '#';
     }

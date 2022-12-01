@@ -102,13 +102,15 @@ export default class GymLeaders extends React.Component {
 
   battleHandler(event) {
     const currUser = JSON.parse(window.localStorage.getItem('currentUser'));
+    const currUserPkmn = JSON.parse(window.localStorage.getItem('currentUserPkmn'));
 
     let recordId;
     const battleData = {
       userId: currUser.user.userId,
-      userPkmn: currUser.user.userPkmn,
+      userPkmn: currUserPkmn.pokemonId,
       leaderPkmn: this.state.selectedLeader.leaderPkmn.pokemonId,
-      leaderName: this.state.selectedLeader.leaderName
+      leaderName: this.state.selectedLeader.leaderName,
+      leaderId: this.state.selectedLeader.leaderId
     };
 
     fetch('/api/battles/new', {

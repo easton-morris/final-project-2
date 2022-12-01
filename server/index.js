@@ -298,14 +298,14 @@ app.get('/api/battles/status/:id', (req, res, next) => {
 // POST: create a battle for a record ID
 
 app.post('/api/battles/new', (req, res, next) => {
-  const { userId, userPkmn, leaderPkmn, leaderName } = req.body;
+  const { userId, userPkmn, leaderPkmn, leaderName, leaderId } = req.body;
 
   const sql = `
-    INSERT INTO "recordList" ("userId", "result", "userPkmn", "leaderPkmn", "leaderName")
-    VALUES ($1, 'pending', $2, $3, $4)
+    INSERT INTO "recordList" ("userId", "result", "userPkmn", "leaderPkmn", "leaderName", "leaderId")
+    VALUES ($1, 'pending', $2, $3, $4, $5)
     RETURNING "recordId"
   `;
-  const params = [userId, userPkmn, leaderPkmn, leaderName];
+  const params = [userId, userPkmn, leaderPkmn, leaderName, leaderId];
   db.query(sql, params)
     .then(result => {
       if (!result.rows[0]) {

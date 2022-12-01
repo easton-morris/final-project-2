@@ -27,6 +27,7 @@ export default class NavBar extends React.Component {
     window.localStorage.removeItem('currentUser');
     window.localStorage.removeItem('battleHistory');
     window.localStorage.removeItem('currentUserPkmn');
+    window.localStorage.removeItem('currentBattle');
     this.context.resetUserState();
     window.location.href = '#';
 
