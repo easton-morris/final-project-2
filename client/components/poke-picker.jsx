@@ -67,13 +67,11 @@ export default class PokePicker extends React.Component {
             if (!res.ok) {
               throw new Error('Something went wrong.');
             } else {
+              this.context.getUserPkmnInfo();
               return res.json();
             }
           })
-          .then(newUserInfo => {
-            this.context.getUserInfo('userPkmn');
-            this.context.getUserPkmnInfo();
-          });
+          .catch(err => console.error(err));
       }
 
       const pokeSuccessToast = document.getElementById('pokeSuccess');

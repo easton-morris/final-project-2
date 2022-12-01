@@ -70,7 +70,6 @@ export default class SignIn extends React.Component {
         }
         window.localStorage.setItem('currentUser', JSON.stringify(response));
 
-        this.context.getUserInfo();
         this.context.getUserPkmnInfo();
 
         window.location.href = '#?user=signin';
@@ -140,7 +139,6 @@ export default class SignIn extends React.Component {
         }
         window.localStorage.setItem('currentUser', JSON.stringify(response));
 
-        this.context.getUserInfo();
         this.context.getUserPkmnInfo();
 
         window.location.href = '#?user=signin';

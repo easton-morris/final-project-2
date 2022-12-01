@@ -24,7 +24,7 @@ export default class GymLeaders extends React.Component {
   }
 
   componentDidMount() {
-    const currUser = window.localStorage.getItem('currentUser');
+    const currUser = JSON.parse(window.localStorage.getItem('currentUser'));
 
     fetch('/api/leader-list/all', {
       method: 'GET',
@@ -101,7 +101,7 @@ export default class GymLeaders extends React.Component {
   }
 
   battleHandler(event) {
-    const currUser = window.localStorage.getItem('currentUser');
+    const currUser = JSON.parse(window.localStorage.getItem('currentUser'));
 
     let recordId;
     const battleData = {
