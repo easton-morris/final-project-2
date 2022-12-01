@@ -24,12 +24,13 @@ export default class GymLeaders extends React.Component {
   }
 
   componentDidMount() {
+    const currUser = window.localStorage.getItem('currentUser');
 
     fetch('/api/leader-list/all', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'x-access-token': this.context.user.token
+        'x-access-token': currUser.token
       }
     })
       .then(res => {
@@ -100,10 +101,12 @@ export default class GymLeaders extends React.Component {
   }
 
   battleHandler(event) {
+    const currUser = window.localStorage.getItem('currentUser');
+
     let recordId;
     const battleData = {
-      userId: this.context.user.user.userId,
-      userPkmn: this.context.user.user.userPkmn,
+      userId: currUser.user.userId,
+      userPkmn: currUser.user.userPkmn,
       leaderPkmn: this.state.selectedLeader.leaderPkmn.pokemonId,
       leaderName: this.state.selectedLeader.leaderName
     };
@@ -112,7 +115,7 @@ export default class GymLeaders extends React.Component {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-access-token': this.context.user.token
+        'x-access-token': currUser.token
       },
       body: JSON.stringify(battleData)
     })
@@ -125,7 +128,7 @@ export default class GymLeaders extends React.Component {
       })
       .then(data => {
         recordId = data.recordId;
-        window.location.href = `#battle?userId=1&userPkmn=1&leaderPkmn=${this.state.selectedLeader.leaderPkmn.pokemonId}&leaderId=${this.state.selectedLeader.leaderId}&recordId=${recordId}`;
+        window.location.href = `#battle?recordId=${recordId}`;
       })
       .catch(err => console.error(err));
 

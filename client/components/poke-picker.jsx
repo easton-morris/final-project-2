@@ -33,17 +33,18 @@ export default class PokePicker extends React.Component {
   }
 
   componentDidMount() {
-    const usersMon = this.context.userPkmn;
-    if (usersMon) {
+    const currUserPkmn = JSON.parse(window.localStorage.getItem('currentUserPkmn'));
+    if (currUserPkmn) {
       this.setState({
-        userPkmn: usersMon,
-        displayPkmn: usersMon
+        userPkmn: currUserPkmn,
+        displayPkmn: currUserPkmn
       });
     }
     this.buildLists();
   }
 
   choosePkmnHandler(event) {
+    const currUser = JSON.parse(window.localStorage.getItem('currentUser'));
     if (this.state.displayPkmn.pkmnName !== this.state.userPkmn.pkmnName) {
       this.setState({
         userPkmn: this.state.displayPkmn
@@ -51,12 +52,12 @@ export default class PokePicker extends React.Component {
 
       const newPkmn = this.state.displayPkmn;
 
-      if (this.context.user) {
-        fetch(`/api/user-pkmn/${this.context.user.user.userId}`, {
+      if (currUser) {
+        fetch(`/api/user-pkmn/${currUser.user.userId}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
-            'x-access-token': this.context.user.token
+            'x-access-token': currUser.token
           },
           body: JSON.stringify({
             pokemon: newPkmn.pokemonId
@@ -70,12 +71,8 @@ export default class PokePicker extends React.Component {
             }
           })
           .then(newUserInfo => {
-            let currUser = JSON.parse(window.localStorage.getItem('currentUser'));
-            const currUserData = currUser.user;
-            currUser = { ...currUser, user: { ...currUserData, userPkmn: newUserInfo.userPkmn } };
-
-            window.localStorage.setItem('currentUser', JSON.stringify(currUser));
-            this.context.getUserInfo();
+            this.context.getUserInfo('userPkmn');
+            this.context.getUserPkmnInfo();
           });
       }
 

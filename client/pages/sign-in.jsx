@@ -1,4 +1,5 @@
 import React from 'react';
+import { AppContext } from '../lib';
 
 // Import custom CSS
 import '../scss/styles.scss';
@@ -37,11 +38,40 @@ export default class SignIn extends React.Component {
         }
       })
       .then(response => {
+        const currentUserId = response.user.userId;
+        const currentUserToken = response.token;
+
+        fetch(`/api/battles/history/${currentUserId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-access-token': currentUserToken
+          }
+        })
+          .then(res => {
+            if (!res.ok) {
+              throw new Error('Something went wrong.');
+            } else {
+              return res.json();
+            }
+          })
+          .then(records => {
+            const currBattleHistory = window.localStorage.getItem('battleHistory');
+            if (currBattleHistory) {
+              window.localStorage.removeItem('battleHistory');
+            }
+            window.localStorage.setItem('battleHistory', JSON.stringify(records));
+          })
+          .catch(err => console.error(err));
+
         const currentUser = window.localStorage.getItem('currentUser');
         if (currentUser) {
           window.localStorage.removeItem('currentUser');
         }
         window.localStorage.setItem('currentUser', JSON.stringify(response));
+
+        this.context.getUserInfo();
+        this.context.getUserPkmnInfo();
 
         window.location.href = '#?user=signin';
       })
@@ -78,11 +108,40 @@ export default class SignIn extends React.Component {
         }
       })
       .then(response => {
+        const currentUserId = response.user.userId;
+        const currentUserToken = response.token;
+
+        fetch(`/api/battles/history/${currentUserId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-access-token': currentUserToken
+          }
+        })
+          .then(res => {
+            if (!res.ok) {
+              throw new Error('Something went wrong.');
+            } else {
+              return res.json();
+            }
+          })
+          .then(records => {
+            const currBattleHistory = window.localStorage.getItem('battleHistory');
+            if (currBattleHistory) {
+              window.localStorage.removeItem('battleHistory');
+            }
+            window.localStorage.setItem('battleHistory', JSON.stringify(records));
+          })
+          .catch(err => console.error(err));
+
         const currentUser = window.localStorage.getItem('currentUser');
         if (currentUser) {
           window.localStorage.removeItem('currentUser');
         }
         window.localStorage.setItem('currentUser', JSON.stringify(response));
+
+        this.context.getUserInfo();
+        this.context.getUserPkmnInfo();
 
         window.location.href = '#?user=signin';
       })
@@ -118,6 +177,32 @@ export default class SignIn extends React.Component {
         }
       })
       .then(newUser => {
+        const currentUserId = newUser.user.userId;
+        const currentUserToken = newUser.token;
+
+        fetch(`/api/battles/history/${currentUserId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-access-token': currentUserToken
+          }
+        })
+          .then(res => {
+            if (!res.ok) {
+              throw new Error('Something went wrong.');
+            } else {
+              return res.json();
+            }
+          })
+          .then(records => {
+            const currBattleHistory = window.localStorage.getItem('battleHistory');
+            if (currBattleHistory) {
+              window.localStorage.removeItem('battleHistory');
+            }
+            window.localStorage.setItem('battleHistory', JSON.stringify(records));
+          })
+          .catch(err => console.error(err));
+
         const currentUser = window.localStorage.getItem('currentUser');
         if (currentUser) {
           window.localStorage.removeItem('currentUser');
@@ -187,3 +272,5 @@ export default class SignIn extends React.Component {
     );
   }
 }
+
+SignIn.contextType = AppContext;

@@ -398,6 +398,38 @@ app.get('/api/battles/history/:id', (req, res, next) => {
     .catch(err => next(err));
 });
 
+// GET: a specific user's current data from the DB
+
+app.get('/api/user-list/:id', (req, res, next) => {
+  const id = req.params.id;
+  if (!id) {
+    throw new ClientError(400, 'id is required');
+  }
+
+  const sql = `
+    SELECT "userId", "username", "userPkmn"
+    FROM "users"
+    WHERE "userId" = $1
+  `;
+  const params = [id];
+  db.query(sql, params)
+    .then(result => {
+      if (!result.rows[0]) {
+        throw new ClientError(400, 'user does not exist');
+      } else {
+        return result.rows[0];
+      }
+    })
+    .then(userInfo => {
+      if (id === userInfo.userId.toString()) {
+        res.status(200).json(userInfo);
+      } else {
+        throw new ClientError(403, 'userId does not match');
+      }
+    })
+    .catch(err => next(err));
+});
+
 app.use(errorMiddleware);
 
 app.listen(process.env.PORT, () => {

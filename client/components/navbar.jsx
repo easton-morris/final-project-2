@@ -14,6 +14,7 @@ export default class NavBar extends React.Component {
 
     this.loginClickHandler = this.loginClickHandler.bind(this);
     this.logoutHandler = this.logoutHandler.bind(this);
+
   }
 
   loginClickHandler(event) {
@@ -24,6 +25,9 @@ export default class NavBar extends React.Component {
 
   logoutHandler(event) {
     window.localStorage.removeItem('currentUser');
+    window.localStorage.removeItem('battleHistory');
+    window.localStorage.removeItem('currentUserPkmn');
+    this.context.resetUserState();
     window.location.href = '#';
 
     event.preventDefault();
@@ -31,6 +35,7 @@ export default class NavBar extends React.Component {
 
   render() {
     const currUser = JSON.parse(window.localStorage.getItem('currentUser'));
+    const currUserPkmn = JSON.parse(window.localStorage.getItem('currentUserPkmn'));
     return (
       <nav className = 'navbar navbar-expand-lg bg-light' >
         <div className='container-fluid'>
@@ -64,7 +69,7 @@ export default class NavBar extends React.Component {
                 <i className="bi bi-person-circle" aria-hidden="true" />
                 <p className='login-btn'>Login</p>
               </button>
-              : <img className='user-pkmn-badge rounded-circle img-thumbnail' src={this.context.userPkmnInfo ? this.context.userPkmnInfo.sprite : ''} alt="User's Pokemon" />
+              : <img className='user-pkmn-badge rounded-circle img-thumbnail' src={currUserPkmn ? currUserPkmn.sprite : ''} alt="User's Pokemon" />
               }
           </div>
         </div>
