@@ -68,7 +68,6 @@ export default class Battles extends React.Component {
     }
 
     const currUser = JSON.parse(window.localStorage.getItem('currentUser'));
-    // let currBattleHistory = JSON.parse(window.localStorage.getItem('battleHistory'));
     const currUserPkmn = JSON.parse(window.localStorage.getItem('currentUserPkmn'));
 
     if (currUser) {
