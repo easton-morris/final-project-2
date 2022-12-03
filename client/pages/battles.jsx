@@ -68,26 +68,13 @@ export default class Battles extends React.Component {
     }
 
     const currUser = JSON.parse(window.localStorage.getItem('currentUser'));
-    let currBattleHistory = JSON.parse(window.localStorage.getItem('battleHistory'));
+    // let currBattleHistory = JSON.parse(window.localStorage.getItem('battleHistory'));
     const currUserPkmn = JSON.parse(window.localStorage.getItem('currentUserPkmn'));
 
-    if (currBattleHistory) {
-      this.context.getUserBattleInfo();
-      currBattleHistory = JSON.parse(window.localStorage.getItem('battleHistory'));
-
-      currBattleHistory.forEach(battle => {
-        if (battle.recordId.toString() === newParams.recordId) {
-          currBattle = battle;
-          if (currBattle) {
-            window.localStorage.setItem('currentBattle', JSON.stringify(currBattle));
-          }
-        }
-      });
-    }
-
     if (currUser) {
+      this.context.getUserBattleInfo();
 
-      fetch(`/api/pkmn-list/${currUserPkmn.pokemonId}`, {
+      fetch(`/api/battles/status/${newParams.recordId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -101,78 +88,100 @@ export default class Battles extends React.Component {
             return res.json();
           }
         })
-        .then(newPkmn => {
+        .then(status => {
+          // set user's pkmn info
+          fetch(`/api/pkmn-list/${status.userPkmn}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-access-token': currUser.token
+            }
+          })
+            .then(res => {
+              if (!res.ok) {
+                throw new Error('Something went wrong.');
+              } else {
+                return res.json();
+              }
+            })
+            .then(newPkmn => {
+              const oldUser = this.state.user;
+              this.setState({
+                user: {
+                  ...oldUser,
+                  pkmn: newPkmn
+                }
+              });
+            })
+            .catch(err => console.error(err));
+
+          // set chosen's leader's pkmn
+          fetch(`/api/pkmn-list/${status.leaderPkmn}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-access-token': currUser.token
+            }
+          })
+            .then(res => {
+              if (!res.ok) {
+                throw new Error('Something went wrong.');
+              } else {
+                return res.json();
+              }
+            })
+            .then(newPkmn => {
+              const oldOpp = this.state.opponent;
+              this.setState({
+                opponent: {
+                  ...oldOpp,
+                  pkmn: newPkmn
+                }
+              });
+            })
+            .catch(err => console.error(err));
+
+          // set chosen leader info
+          fetch(`/api/leader-list/${status.leaderId}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-access-token': currUser.token
+            }
+          })
+            .then(res => {
+              if (!res.ok) {
+                throw new Error('Something went wrong.');
+              } else {
+                return res.json();
+              }
+            })
+            .then(newLeader => {
+              const oldOpp = this.state.opponent;
+              this.setState({
+                opponent: {
+                  ...oldOpp,
+                  leader: newLeader
+                }
+              });
+            })
+            .catch(err => console.error(err));
+
+          currBattle = status;
+          window.localStorage.setItem('currentBattle', JSON.stringify(currBattle));
+
           const oldUser = this.state.user;
+
           this.setState({
             user: {
               ...oldUser,
-              pkmn: newPkmn
-            }
+              userId: currUserPkmn.pokemonId
+            },
+            params: newParams
           });
+
         })
         .catch(err => console.error(err));
-
-      fetch(`/api/pkmn-list/${currBattle.leaderPkmn}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-access-token': currUser.token
-        }
-      })
-        .then(res => {
-          if (!res.ok) {
-            throw new Error('Something went wrong.');
-          } else {
-            return res.json();
-          }
-        })
-        .then(newPkmn => {
-          const oldOpp = this.state.opponent;
-          this.setState({
-            opponent: {
-              ...oldOpp,
-              pkmn: newPkmn
-            }
-          });
-        })
-        .catch(err => console.error(err));
-
-      fetch(`/api/leader-list/${currBattle.leaderId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-access-token': currUser.token
-        }
-      })
-        .then(res => {
-          if (!res.ok) {
-            throw new Error('Something went wrong.');
-          } else {
-            return res.json();
-          }
-        })
-        .then(newLeader => {
-          const oldOpp = this.state.opponent;
-          this.setState({
-            opponent: {
-              ...oldOpp,
-              leader: newLeader
-            }
-          });
-        })
-        .catch(err => console.error(err));
-
-      const oldUser = this.state.user;
-
-      this.setState({
-        user: {
-          ...oldUser,
-          userId: currUserPkmn.pokemonId
-        },
-        params: newParams
-      });
-    } else if (!currUser) {
-      console.error('Must be logged in.');
     }
   }
 
@@ -237,7 +246,7 @@ export default class Battles extends React.Component {
           battleStatus: status.result
         });
 
-        if (status !== 'pending') {
+        if (status.result !== 'pending') {
           const completedToast = document.getElementById('battleCompleted');
           const toast = new bootstrap.Toast(completedToast);
 

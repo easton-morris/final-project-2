@@ -276,7 +276,7 @@ app.get('/api/battles/status/:id', (req, res, next) => {
   }
 
   const sql = `
-    SELECT "result"
+    SELECT *
     FROM "recordList"
     WHERE "recordId" = $1
   `;
