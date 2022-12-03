@@ -237,7 +237,7 @@ export default class Battles extends React.Component {
           battleStatus: status.result
         });
 
-        if (currBattle.result !== 'pending' || this.state.battleStatus !== 'pending') {
+        if (status !== 'pending') {
           const completedToast = document.getElementById('battleCompleted');
           const toast = new bootstrap.Toast(completedToast);
 
