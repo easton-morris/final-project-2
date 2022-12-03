@@ -236,87 +236,87 @@ export default class Battles extends React.Component {
         this.setState({
           battleStatus: status.result
         });
+
+        if (currBattle.result !== 'pending' || this.state.battleStatus !== 'pending') {
+          const completedToast = document.getElementById('battleCompleted');
+          const toast = new bootstrap.Toast(completedToast);
+
+          toast.show();
+        } else {
+          // initialize the result modal
+          const resultModal = new bootstrap.Modal('#battleResult', {
+            keyboard: false
+          });
+
+          const leaderMove = getRandomIntInclusive(1, 3);
+
+          if (leaderMove === 1) {
+            if (userMove === 1) {
+              this.setState({
+                battleResult: 'tie'
+              });
+              resultModal.show();
+            }
+            if (userMove === 2) {
+              this.setState({
+                battleResult: 'win'
+              });
+              this.battleUpdater('win');
+              resultModal.show();
+            }
+            if (userMove === 3) {
+              this.setState({
+                battleResult: 'loss'
+              });
+              this.battleUpdater('loss');
+              resultModal.show();
+            }
+          } else if (leaderMove === 2) {
+            if (userMove === 2) {
+              this.setState({
+                battleResult: 'tie'
+              });
+              resultModal.show();
+            }
+            if (userMove === 3) {
+              this.setState({
+                battleResult: 'win'
+              });
+              this.battleUpdater('win');
+              resultModal.show();
+            }
+            if (userMove === 1) {
+              this.setState({
+                battleResult: 'loss'
+              });
+              this.battleUpdater('loss');
+              resultModal.show();
+            }
+          } else if (leaderMove === 3) {
+            if (userMove === 3) {
+              this.setState({
+                battleResult: 'tie'
+              });
+              resultModal.show();
+            }
+            if (userMove === 1) {
+              this.setState({
+                battleResult: 'win'
+              });
+              this.battleUpdater('win');
+              resultModal.show();
+            }
+            if (userMove === 2) {
+              this.setState({
+                battleResult: 'loss'
+              });
+              this.battleUpdater('loss');
+              resultModal.show();
+            }
+          }
+        }
       })
       .catch(err => console.error(err));
-
-    if (currBattle.result !== 'pending' || this.state.battleStatus !== 'pending') {
-      const completedToast = document.getElementById('battleCompleted');
-      const toast = new bootstrap.Toast(completedToast);
-
-      toast.show();
-    } else {
-      // initialize the result modal
-      const resultModal = new bootstrap.Modal('#battleResult', {
-        keyboard: false
-      });
-
-      const leaderMove = getRandomIntInclusive(1, 3);
-
-      if (leaderMove === 1) {
-        if (userMove === 1) {
-          this.setState({
-            battleResult: 'tie'
-          });
-          resultModal.show();
-        }
-        if (userMove === 2) {
-          this.setState({
-            battleResult: 'win'
-          });
-          this.battleUpdater('win');
-          resultModal.show();
-        }
-        if (userMove === 3) {
-          this.setState({
-            battleResult: 'loss'
-          });
-          this.battleUpdater('loss');
-          resultModal.show();
-        }
-      } else if (leaderMove === 2) {
-        if (userMove === 2) {
-          this.setState({
-            battleResult: 'tie'
-          });
-          resultModal.show();
-        }
-        if (userMove === 3) {
-          this.setState({
-            battleResult: 'win'
-          });
-          this.battleUpdater('win');
-          resultModal.show();
-        }
-        if (userMove === 1) {
-          this.setState({
-            battleResult: 'loss'
-          });
-          this.battleUpdater('loss');
-          resultModal.show();
-        }
-      } else if (leaderMove === 3) {
-        if (userMove === 3) {
-          this.setState({
-            battleResult: 'tie'
-          });
-          resultModal.show();
-        }
-        if (userMove === 1) {
-          this.setState({
-            battleResult: 'win'
-          });
-          this.battleUpdater('win');
-          resultModal.show();
-        }
-        if (userMove === 2) {
-          this.setState({
-            battleResult: 'loss'
-          });
-          this.battleUpdater('loss');
-          resultModal.show();
-        }
-      }
-    }
   }
 
   onMoveSelectHandler(event) {
