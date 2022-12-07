@@ -1,4 +1,5 @@
 import React from 'react';
+import AppContext from '../lib/app-context';
 
 // Import custom CSS
 import '../scss/styles.scss';
@@ -32,24 +33,46 @@ export default class PokePicker extends React.Component {
   }
 
   componentDidMount() {
-    const usersMon = JSON.parse(localStorage.getItem('userPkmn'));
-    if (usersMon) {
+    const currUserPkmn = JSON.parse(window.localStorage.getItem('currentUserPkmn'));
+    if (currUserPkmn) {
       this.setState({
-        userPkmn: usersMon,
-        displayPkmn: usersMon
+        userPkmn: currUserPkmn,
+        displayPkmn: currUserPkmn
       });
     }
     this.buildLists();
   }
 
   choosePkmnHandler(event) {
+    const currUser = JSON.parse(window.localStorage.getItem('currentUser'));
     if (this.state.displayPkmn.pkmnName !== this.state.userPkmn.pkmnName) {
       this.setState({
         userPkmn: this.state.displayPkmn
       });
 
-      // set in localStorage until i get sign in working //
-      localStorage.setItem('userPkmn', JSON.stringify(this.state.displayPkmn));
+      const newPkmn = this.state.displayPkmn;
+
+      if (currUser) {
+        fetch(`/api/user-pkmn/${currUser.user.userId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-access-token': currUser.token
+          },
+          body: JSON.stringify({
+            pokemon: newPkmn.pokemonId
+          })
+        })
+          .then(res => {
+            if (!res.ok) {
+              throw new Error('Something went wrong.');
+            } else {
+              this.context.getUserPkmnInfo();
+              return res.json();
+            }
+          })
+          .catch(err => console.error(err));
+      }
 
       const pokeSuccessToast = document.getElementById('pokeSuccess');
       const toast = new bootstrap.Toast(pokeSuccessToast);
@@ -179,3 +202,5 @@ export default class PokePicker extends React.Component {
     );
   }
 }
+
+PokePicker.contextType = AppContext;

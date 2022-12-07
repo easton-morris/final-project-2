@@ -1,4 +1,5 @@
 import React from 'react';
+import AppContext from '../lib/app-context';
 
 // Import custom CSS
 import '../scss/styles.scss';
@@ -23,8 +24,15 @@ export default class GymLeaders extends React.Component {
   }
 
   componentDidMount() {
+    const currUser = JSON.parse(window.localStorage.getItem('currentUser'));
 
-    fetch('/api/leader-list/all')
+    fetch('/api/leader-list/all', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-access-token': currUser.token
+      }
+    })
       .then(res => {
         if (!res.ok) {
           throw new Error('Something went wrong.');
@@ -92,21 +100,24 @@ export default class GymLeaders extends React.Component {
     event.preventDefault();
   }
 
-  // userId and userPkmn in the query string until I have auth set up, along with a bunch of other data
-
   battleHandler(event) {
+    const currUser = JSON.parse(window.localStorage.getItem('currentUser'));
+    const currUserPkmn = JSON.parse(window.localStorage.getItem('currentUserPkmn'));
+
     let recordId;
     const battleData = {
-      userId: 1,
-      userPkmn: 1,
+      userId: currUser.user.userId,
+      userPkmn: currUserPkmn.pokemonId,
       leaderPkmn: this.state.selectedLeader.leaderPkmn.pokemonId,
-      leaderName: this.state.selectedLeader.leaderName
+      leaderName: this.state.selectedLeader.leaderName,
+      leaderId: this.state.selectedLeader.leaderId
     };
 
     fetch('/api/battles/new', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'x-access-token': currUser.token
       },
       body: JSON.stringify(battleData)
     })
@@ -119,7 +130,7 @@ export default class GymLeaders extends React.Component {
       })
       .then(data => {
         recordId = data.recordId;
-        window.location.href = `#battle?userId=1&userPkmn=1&leaderPkmn=${this.state.selectedLeader.leaderPkmn.pokemonId}&leaderId=${this.state.selectedLeader.leaderId}&recordId=${recordId}`;
+        window.location.href = `#battle?recordId=${recordId}`;
       })
       .catch(err => console.error(err));
 
@@ -162,3 +173,5 @@ export default class GymLeaders extends React.Component {
     }
   }
 }
+
+GymLeaders.contextType = AppContext;

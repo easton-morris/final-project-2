@@ -1,4 +1,5 @@
 import React from 'react';
+import AppContext from '../lib/app-context';
 
 // Import custom CSS
 import '../scss/styles.scss';
@@ -44,6 +45,7 @@ export default class Battles extends React.Component {
         }
       },
       battleResult: '',
+      battleStatus: null,
       params: {}
     };
 
@@ -54,7 +56,9 @@ export default class Battles extends React.Component {
   }
 
   componentDidMount() {
-    let dbBattleStatus = 'pending';
+    this.context.getUserBattleInfo();
+    window.localStorage.removeItem('currentBattle');
+    let currBattle = null;
 
     const route = parseRoute(window.location.hash);
     const incParams = route.params;
@@ -63,97 +67,125 @@ export default class Battles extends React.Component {
       newParams[`${item}`] = value;
     }
 
-    fetch(`/api/battles/status/${newParams.recordId}`)
-      .then(res => {
-        if (!res.ok) {
-          throw new Error('Something went wrong.');
-        } else {
-          return res.json();
+    const currUser = JSON.parse(window.localStorage.getItem('currentUser'));
+    const currUserPkmn = JSON.parse(window.localStorage.getItem('currentUserPkmn'));
+
+    if (currUser) {
+      this.context.getUserBattleInfo();
+
+      fetch(`/api/battles/status/${newParams.recordId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-access-token': currUser.token
         }
       })
-      .then(status => {
-        dbBattleStatus = status;
-      })
-      .catch(err => console.error(err));
+        .then(res => {
+          if (!res.ok) {
+            throw new Error('Something went wrong.');
+          } else {
+            return res.json();
+          }
+        })
+        .then(status => {
+          // set user's pkmn info
+          fetch(`/api/pkmn-list/${status.userPkmn}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-access-token': currUser.token
+            }
+          })
+            .then(res => {
+              if (!res.ok) {
+                throw new Error('Something went wrong.');
+              } else {
+                return res.json();
+              }
+            })
+            .then(newPkmn => {
+              const oldUser = this.state.user;
+              this.setState({
+                user: {
+                  ...oldUser,
+                  pkmn: newPkmn
+                }
+              });
+            })
+            .catch(err => console.error(err));
 
-    // using localStorage for battleStatus until auth is applied
-    const battleStatus = localStorage.getItem('battleStatus');
+          // set chosen's leader's pkmn
+          fetch(`/api/pkmn-list/${status.leaderPkmn}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-access-token': currUser.token
+            }
+          })
+            .then(res => {
+              if (!res.ok) {
+                throw new Error('Something went wrong.');
+              } else {
+                return res.json();
+              }
+            })
+            .then(newPkmn => {
+              const oldOpp = this.state.opponent;
+              this.setState({
+                opponent: {
+                  ...oldOpp,
+                  pkmn: newPkmn
+                }
+              });
+            })
+            .catch(err => console.error(err));
 
-    if (!battleStatus && dbBattleStatus === 'pending') {
-      localStorage.setItem('battleStatus', 'in progress');
-    } else if (!battleStatus && dbBattleStatus !== 'pending') {
-      localStorage.setItem('battleStatus', `complete: ${dbBattleStatus}`);
+          // set chosen leader info
+          fetch(`/api/leader-list/${status.leaderId}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-access-token': currUser.token
+            }
+          })
+            .then(res => {
+              if (!res.ok) {
+                throw new Error('Something went wrong.');
+              } else {
+                return res.json();
+              }
+            })
+            .then(newLeader => {
+              const oldOpp = this.state.opponent;
+              this.setState({
+                opponent: {
+                  ...oldOpp,
+                  leader: newLeader
+                }
+              });
+            })
+            .catch(err => console.error(err));
+
+          currBattle = status;
+          window.localStorage.setItem('currentBattle', JSON.stringify(currBattle));
+
+          const oldUser = this.state.user;
+
+          this.setState({
+            user: {
+              ...oldUser,
+              userId: currUserPkmn.pokemonId
+            },
+            params: newParams
+          });
+
+        })
+        .catch(err => console.error(err));
     }
-
-    fetch(`/api/pkmn-list/${newParams.userPkmn}`)
-      .then(res => {
-        if (!res.ok) {
-          throw new Error('Something went wrong.');
-        } else {
-          return res.json();
-        }
-      })
-      .then(newPkmn => {
-        const oldUser = this.state.user;
-        this.setState({
-          user: {
-            ...oldUser,
-            pkmn: newPkmn
-          }
-        });
-      })
-      .catch(err => console.error(err));
-
-    fetch(`/api/pkmn-list/${newParams.leaderPkmn}`)
-      .then(res => {
-        if (!res.ok) {
-          throw new Error('Something went wrong.');
-        } else {
-          return res.json();
-        }
-      })
-      .then(newPkmn => {
-        const oldOpp = this.state.opponent;
-        this.setState({
-          opponent: {
-            ...oldOpp,
-            pkmn: newPkmn
-          }
-        });
-      })
-      .catch(err => console.error(err));
-
-    fetch(`/api/leader-list/${newParams.leaderId}`)
-      .then(res => {
-        if (!res.ok) {
-          throw new Error('Something went wrong.');
-        } else {
-          return res.json();
-        }
-      })
-      .then(newLeader => {
-        const oldOpp = this.state.opponent;
-        this.setState({
-          opponent: {
-            ...oldOpp,
-            leader: newLeader
-          }
-        });
-      })
-      .catch(err => console.error(err));
-
-    const oldUser = this.state.user;
-
-    this.setState({
-      user: {
-        ...oldUser,
-        userId: newParams.userPkmn
-      },
-      params: newParams
-    });
   }
 
   battleUpdater(result) {
+    const currUser = JSON.parse(window.localStorage.getItem('currentUser'));
     const battleData = {
       recordId: this.state.params.recordId,
       battleResult: result
@@ -161,7 +193,8 @@ export default class Battles extends React.Component {
     fetch('/api/battles/result', {
       method: 'PATCH',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'x-access-token': currUser.token
       },
       body: JSON.stringify(battleData)
     })
@@ -173,11 +206,11 @@ export default class Battles extends React.Component {
         }
       })
       .then(record => {
-        // using localStorage for battleStatus until auth is applied
-        const battleStatus = localStorage.getItem('battleStatus');
+        const currBattle = JSON.parse(window.localStorage.getItem('currentBattle'));
 
-        if (battleStatus === 'in progress') {
-          localStorage.setItem('battleStatus', `complete: ${record.result}`);
+        if (currBattle.result === 'pending') {
+          currBattle.result = record.result;
+          window.localStorage.setItem('currentBattle', JSON.stringify(currBattle));
         }
       })
       .catch(err => console.error(err));
@@ -190,86 +223,108 @@ export default class Battles extends React.Component {
       return Math.floor(Math.random() * (max - min + 1) + min); // The maximum is inclusive and the minimum is inclusive
     }
 
-    // using localStorage for battleStatus until auth is applied
-    const battleStatus = localStorage.getItem('battleStatus');
-    if (battleStatus.includes('complete')) {
-      const completedToast = document.getElementById('battleCompleted');
-      const toast = new bootstrap.Toast(completedToast);
-
-      toast.show();
-    } else {
-      // initialize the result modal
-      const resultModal = new bootstrap.Modal('#battleResult', {
-        keyboard: false
-      });
-
-      const leaderMove = getRandomIntInclusive(1, 3);
-
-      if (leaderMove === 1) {
-        if (userMove === 1) {
-          this.setState({
-            battleResult: 'tie'
-          });
-          resultModal.show();
-        }
-        if (userMove === 2) {
-          this.setState({
-            battleResult: 'win'
-          });
-          this.battleUpdater('win');
-          resultModal.show();
-        }
-        if (userMove === 3) {
-          this.setState({
-            battleResult: 'loss'
-          });
-          this.battleUpdater('loss');
-          resultModal.show();
-        }
-      } else if (leaderMove === 2) {
-        if (userMove === 2) {
-          this.setState({
-            battleResult: 'tie'
-          });
-          resultModal.show();
-        }
-        if (userMove === 3) {
-          this.setState({
-            battleResult: 'win'
-          });
-          this.battleUpdater('win');
-          resultModal.show();
-        }
-        if (userMove === 1) {
-          this.setState({
-            battleResult: 'loss'
-          });
-          this.battleUpdater('loss');
-          resultModal.show();
-        }
-      } else if (leaderMove === 3) {
-        if (userMove === 3) {
-          this.setState({
-            battleResult: 'tie'
-          });
-          resultModal.show();
-        }
-        if (userMove === 1) {
-          this.setState({
-            battleResult: 'win'
-          });
-          this.battleUpdater('win');
-          resultModal.show();
-        }
-        if (userMove === 2) {
-          this.setState({
-            battleResult: 'loss'
-          });
-          this.battleUpdater('loss');
-          resultModal.show();
-        }
+    const currUser = JSON.parse(window.localStorage.getItem('currentUser'));
+    const currBattle = JSON.parse(window.localStorage.getItem('currentBattle'));
+    // check the status to make sure battle hasn't already completed
+    fetch(`/api/battles/status/${currBattle.recordId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-access-token': currUser.token
       }
-    }
+    })
+      .then(res => {
+        if (!res.ok) {
+          throw new Error('Something went wrong.');
+        } else {
+          return res.json();
+        }
+      })
+      .then(status => {
+        this.setState({
+          battleStatus: status.result
+        });
+
+        if (status.result !== 'pending') {
+          const completedToast = document.getElementById('battleCompleted');
+          const toast = new bootstrap.Toast(completedToast);
+
+          toast.show();
+        } else {
+          // initialize the result modal
+          const resultModal = new bootstrap.Modal('#battleResult', {
+            keyboard: false
+          });
+
+          const leaderMove = getRandomIntInclusive(1, 3);
+
+          if (leaderMove === 1) {
+            if (userMove === 1) {
+              this.setState({
+                battleResult: 'tie'
+              });
+              resultModal.show();
+            }
+            if (userMove === 2) {
+              this.setState({
+                battleResult: 'win'
+              });
+              this.battleUpdater('win');
+              resultModal.show();
+            }
+            if (userMove === 3) {
+              this.setState({
+                battleResult: 'loss'
+              });
+              this.battleUpdater('loss');
+              resultModal.show();
+            }
+          } else if (leaderMove === 2) {
+            if (userMove === 2) {
+              this.setState({
+                battleResult: 'tie'
+              });
+              resultModal.show();
+            }
+            if (userMove === 3) {
+              this.setState({
+                battleResult: 'win'
+              });
+              this.battleUpdater('win');
+              resultModal.show();
+            }
+            if (userMove === 1) {
+              this.setState({
+                battleResult: 'loss'
+              });
+              this.battleUpdater('loss');
+              resultModal.show();
+            }
+          } else if (leaderMove === 3) {
+            if (userMove === 3) {
+              this.setState({
+                battleResult: 'tie'
+              });
+              resultModal.show();
+            }
+            if (userMove === 1) {
+              this.setState({
+                battleResult: 'win'
+              });
+              this.battleUpdater('win');
+              resultModal.show();
+            }
+            if (userMove === 2) {
+              this.setState({
+                battleResult: 'loss'
+              });
+              this.battleUpdater('loss');
+              resultModal.show();
+            }
+          }
+        }
+      })
+      .catch(err => console.error(err));
   }
 
   onMoveSelectHandler(event) {
@@ -285,19 +340,17 @@ export default class Battles extends React.Component {
   }
 
   returnHomeHandler(event) {
-    // using localStorage for battleStatus until auth is applied
-    const battleStatus = localStorage.getItem('battleStatus');
+    const currBattle = JSON.parse(window.localStorage.getItem('currentBattle'));
 
-    if (battleStatus === 'in progress') {
+    if (currBattle.result === 'pending') {
       const inProgressToast = document.getElementById('battleInProgress');
       const toast = new bootstrap.Toast(inProgressToast);
 
       toast.show();
     }
 
-    if (battleStatus.includes('complete')) {
-      // using localStorage until Auth is in place
-      localStorage.removeItem('battleStatus');
+    if (currBattle.result !== 'pending') {
+      window.localStorage.removeItem('currentBattle');
 
       window.location.href = '#';
     }
@@ -387,3 +440,5 @@ export default class Battles extends React.Component {
     );
   }
 }
+
+Battles.contextType = AppContext;

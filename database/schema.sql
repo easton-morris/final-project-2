@@ -9,10 +9,10 @@ create schema "public";
 CREATE TABLE "public"."users" (
 	"userId" serial NOT NULL,
 	"username" text NOT NULL UNIQUE,
-	"password" text NOT NULL,
+	"hashPassword" text NOT NULL,
 	"email" text NOT NULL UNIQUE,
 	"createdAt" TIMESTAMPTZ NOT NULL default now(),
-	"userPkmn" integer,
+	"userPkmn" integer DEFAULT 1,
 	CONSTRAINT "users_pk" PRIMARY KEY ("userId")
 ) WITH (
   OIDS=FALSE
@@ -46,6 +46,7 @@ CREATE TABLE "public"."recordList" (
 	"recordId" serial,
 	"result" text NOT NULL,
 	"userPkmn" integer NOT NULL,
+  "leaderId" integer NOT NULL,
 	"leaderPkmn" integer NOT NULL,
   "leaderName" text NOT NULL,
 	CONSTRAINT "recordList_pk" PRIMARY KEY ("recordId")
@@ -58,3 +59,4 @@ ALTER TABLE "leaders" ADD CONSTRAINT "leaders_fk0" FOREIGN KEY ("leaderPkmn") RE
 ALTER TABLE "recordList" ADD CONSTRAINT "recordList_fk0" FOREIGN KEY ("userId") REFERENCES "users"("userId");
 ALTER TABLE "recordList" ADD CONSTRAINT "recordList_fk1" FOREIGN KEY ("userPkmn") REFERENCES "pokemon"("pokemonId");
 ALTER TABLE "recordList" ADD CONSTRAINT "recordList_fk2" FOREIGN KEY ("leaderPkmn") REFERENCES "pokemon"("pokemonId");
+ALTER TABLE "recordList" ADD CONSTRAINT "recordList_fk3" FOREIGN KEY ("leaderId") REFERENCES "leaders"("leaderId");
